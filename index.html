@@ -1479,6 +1479,12 @@ function drawResultCardCanvas(){
   ctx.fillStyle = "#c9c2ae";
   ctx.fillText("SYNTHETIC BIOLOGY // SOLO PROTOCOL", 40, 88);
 
+  ctx.textAlign = "right";
+  ctx.font = "12px 'IBM Plex Mono', monospace";
+  ctx.fillStyle = "#c9c2ae";
+  ctx.fillText("Adapted from BioBattle - Manipal BioMachines", 760, 34);
+  ctx.textAlign = "left";
+
   ctx.font = "bold 28px 'Space Grotesk', sans-serif";
   ctx.fillStyle = win ? "#D0F4EA" : "#e05a5a";
   ctx.fillText(win ? "VICTORY" : "DEFEAT", 40, 140);
@@ -2357,4 +2363,3 @@ render();
 </script>
 </body>
 </html>
-
