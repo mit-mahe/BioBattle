@@ -193,6 +193,18 @@ body{
   }
   .btn-chip:hover{ background:var(--danger); color:#fff; }
 
+  .panel-header-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    flex-wrap:wrap; margin-bottom:12px;
+  }
+  .panel-header-row h2{ margin:0; }
+  .panel-back-btn{
+    font-family:'IBM Plex Mono',monospace; font-size:.74rem; background:var(--panel-2);
+    color:var(--cream); border:1px solid var(--line); border-radius:20px; padding:7px 14px;
+    cursor:pointer; transition:background .15s ease, border-color .15s ease; flex-shrink:0;
+  }
+  .panel-back-btn:hover{ background:var(--panel); border-color:var(--signal); color:var(--signal); }
+
   .btn:hover{ transform:translateY(-1px); box-shadow:0 6px 18px rgba(208,244,234,0.35); }
 
   .btn:disabled{ opacity:.35; cursor:not-allowed; transform:none; box-shadow:none; }
@@ -445,6 +457,35 @@ body{
   .exposure-badge.mid{ background:rgba(201,138,46,.2); color:#e0a94f; }
 
   .exposure-badge.high{ background:rgba(224,90,90,.2); color:var(--danger); }
+
+  /* ---------- codex ---------- */
+  .codex-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+  @media (max-width:640px){ .codex-grid{ grid-template-columns:1fr; } }
+  .codex-entry{
+    background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:12px 14px;
+  }
+  .codex-entry.locked{ opacity:.5; }
+  .codex-name{ font-family:'Space Grotesk',sans-serif; font-weight:700; margin-bottom:6px; }
+  .codex-fact{ font-size:.82rem; color:#c9c2ae; line-height:1.5; }
+  .codex-src{ font-size:.68rem; color:var(--muted); margin-top:6px; font-family:'IBM Plex Mono',monospace; }
+
+  /* ---------- achievements ---------- */
+  .ach-grid{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+  .ach-entry{
+    display:flex; align-items:flex-start; gap:14px; background:var(--panel-2);
+    border:1px solid var(--line); border-radius:10px; padding:12px 14px;
+  }
+  .ach-entry.locked{ opacity:.45; }
+  .ach-icon{ font-size:1.4rem; line-height:1; flex-shrink:0; }
+  .ach-name{ font-family:'Space Grotesk',sans-serif; font-weight:700; }
+  .ach-desc{ font-size:.82rem; color:#c9c2ae; line-height:1.5; margin-top:4px; }
+
+  .ach-unlocked-banner{
+    margin-top:16px; background:rgba(163,101,26,0.15); border:1px solid var(--spark);
+    border-radius:10px; padding:14px 16px;
+  }
+  .ach-unlocked-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; margin-bottom:8px; color:var(--spark); }
+  .ach-unlocked-item{ font-size:.84rem; color:#c9c2ae; line-height:1.5; margin-top:4px; }
 
   .cover{
     min-height:70vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -1083,6 +1124,7 @@ function newRun(){
   state.wbQueue = draw(WILDBYTES,3);
   state.round = 0; state.bossRound = 0; state.phase = "setup";
   state.selectedGenmod = null; state.gameOverText = null;
+  state._achievementsEvaluated = false; state.newlyUnlocked = [];
   state.wbWins = 0;
   state.bossDefeats = 0;
   state.currentBoss = null;
@@ -1356,6 +1398,146 @@ function wrapWithFactTip(cardHtml, type, name, base){
   </div>`;
 }
 
+/* ---------- persistence helpers ---------- */
+function loadJSON(key, fallback){
+  try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch(e){ return fallback; }
+}
+function saveJSON(key, val){
+  try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){}
+}
+
+/* ---------- fun fact codex ---------- */
+const CODEX_KEY = "biobattle_codex_v1";
+let codexSeen = new Set(loadJSON(CODEX_KEY, []));
+function factKeyFor(type, name, base){
+  if(ORGANISM_FACTS[type+":"+name]) return type+":"+name;
+  if(base){
+    if(ORGANISM_FACTS["biocore:"+base]) return "biocore:"+base;
+    if(ORGANISM_FACTS["genmod:"+base]) return "genmod:"+base;
+  }
+  return null;
+}
+function markFactSeen(type, name, base){
+  const key = factKeyFor(type, name, base);
+  if(key && !codexSeen.has(key)){
+    codexSeen.add(key);
+    saveJSON(CODEX_KEY, [...codexSeen]);
+  }
+}
+
+/* ---------- achievements ---------- */
+const ACHIEVEMENTS = [
+  {id:"victory", name:"Bioweapon Slayer", desc:"Win a run by neutralizing both Project Hollowcross bioweapons.",
+    check: s => s.gameOverText==="win"},
+  {id:"perfect", name:"Perfect Run", desc:"Win a run without losing a single starting BioCore.",
+    check: s => s.gameOverText==="win" && s.roster.slice(0,2).every(b=>b.alive)},
+  {id:"stacked", name:"Stacked Up", desc:"Win a run after assigning both starting GenMods to the same BioCore.",
+    check: s => s.gameOverText==="win" && s.roster.slice(0,2).some(b=>(b.genmods||[]).length>=2)},
+  {id:"split", name:"Even Split", desc:"Win a run after giving each starting BioCore exactly one GenMod.",
+    check: s => s.gameOverText==="win" && s.roster.slice(0,2).every(b=>(b.genmods||[]).length===1)},
+  {id:"researcher", name:"Field Researcher", desc:"Discover 10 or more Field Notes in the Codex.",
+    check: () => codexSeen.size>=10},
+  {id:"naturalist", name:"Master Naturalist", desc:"Discover every Field Note in the Codex.",
+    check: () => codexSeen.size>=Object.keys(ORGANISM_FACTS).length}
+];
+const ACH_KEY = "biobattle_achievements_v1";
+let unlockedAchievements = new Set(loadJSON(ACH_KEY, []));
+function evaluateAchievements(){
+  const freshlyUnlocked = [];
+  ACHIEVEMENTS.forEach(a=>{
+    if(!unlockedAchievements.has(a.id) && a.check(state)){
+      unlockedAchievements.add(a.id);
+      freshlyUnlocked.push(a);
+    }
+  });
+  if(freshlyUnlocked.length) saveJSON(ACH_KEY, [...unlockedAchievements]);
+  return freshlyUnlocked;
+}
+
+/* ---------- shareable result card ---------- */
+function drawResultCardCanvas(){
+  const canvas = document.createElement("canvas");
+  canvas.width = 800; canvas.height = 450;
+  const ctx = canvas.getContext("2d");
+
+  const grad = ctx.createLinearGradient(0, 0, 800, 450);
+  grad.addColorStop(0, "#4b3a80");
+  grad.addColorStop(1, "#a3401d");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 800, 450);
+  ctx.fillStyle = "rgba(8,11,16,0.55)";
+  ctx.fillRect(0, 0, 800, 450);
+
+  const win = state.gameOverText === "win";
+
+  ctx.fillStyle = "#eee6d3";
+  ctx.font = "bold 40px 'Space Grotesk', sans-serif";
+  ctx.fillText("BIOBATTLE", 40, 66);
+
+  ctx.font = "13px 'IBM Plex Mono', monospace";
+  ctx.fillStyle = "#c9c2ae";
+  ctx.fillText("SYNTHETIC BIOLOGY // SOLO PROTOCOL", 40, 88);
+
+  ctx.font = "bold 28px 'Space Grotesk', sans-serif";
+  ctx.fillStyle = win ? "#D0F4EA" : "#e05a5a";
+  ctx.fillText(win ? "VICTORY" : "DEFEAT", 40, 140);
+
+  ctx.font = "16px 'IBM Plex Mono', monospace";
+  ctx.fillStyle = "#eee6d3";
+  const starterNames = state.roster.slice(0,2).map(b=>b.name).join(" & ") || "—";
+  const survivors = aliveRoster().map(b=>b.name).join(", ") || "None";
+  const lines = [
+    `Squad: ${starterNames}`,
+    `Bosses Neutralized: ${state.bossDefeats||0} / 2`,
+    `Surviving BioCores: ${survivors}`,
+    `Field Notes Discovered: ${codexSeen.size} / ${Object.keys(ORGANISM_FACTS).length}`,
+    `Achievements Unlocked: ${unlockedAchievements.size} / ${ACHIEVEMENTS.length}`
+  ];
+  lines.forEach((line, i)=> ctx.fillText(line, 40, 185 + i*28));
+
+  if(state.newlyUnlocked && state.newlyUnlocked.length){
+    let y = 185 + lines.length*28 + 26;
+    ctx.font = "bold 15px 'IBM Plex Mono', monospace";
+    ctx.fillStyle = "#e0a94f";
+    ctx.fillText("New this run:", 40, y);
+    ctx.font = "14px 'IBM Plex Mono', monospace";
+    ctx.fillStyle = "#eee6d3";
+    state.newlyUnlocked.forEach((a, i)=> ctx.fillText(`• ${a.name}`, 60, y + 22 + i*20));
+  }
+
+  ctx.font = "12px 'IBM Plex Mono', monospace";
+  ctx.fillStyle = "#8a93a6";
+  ctx.fillText("Game Design and Development by Shivam Mohite", 40, 420);
+  ctx.fillText("Creative Design by Aditi Rishiraj, Neethu Mariam, V. Sai Pallavi", 40, 436);
+
+  return canvas;
+}
+
+function downloadResultCard(){
+  try{
+    const canvas = drawResultCardCanvas();
+    const dataUrl = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.download = "biobattle-result.png";
+    link.href = dataUrl;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(()=>{ document.body.removeChild(link); }, 100);
+  }catch(err){
+    // Fallback for browsers that block programmatic downloads of data URIs
+    // (some Safari/mobile versions): open the image in a new tab so the
+    // person can long-press / right-click to save it manually.
+    try{
+      const canvas = drawResultCardCanvas();
+      window.open(canvas.toDataURL("image/png"), "_blank");
+    }catch(err2){
+      alert("Couldn't generate the result card image on this browser. Try again, or take a screenshot instead.");
+    }
+  }
+}
+
 const STAT_Y_BY_TYPE = {
   biocore: {top:85, height:5.5},
   genmod:  {top:83.5, height:5.5},
@@ -1519,6 +1701,8 @@ function renderScreen(){
     case "chaos-reveal": return screenChaos();
     case "phase-transition": return screenPhaseTransition();
     case "field-index": return screenFieldIndex();
+    case "codex": return screenCodex();
+    case "achievements": return screenAchievements();
     case "end": return screenEnd();
     default: return screenTitle();
   }
@@ -1598,7 +1782,10 @@ function screenFieldIndex(){
   return `
   <div class="brand"><h1>BIO<span>BATTLE</span></h1><small>FIELD INDEX</small></div>
   <div class="panel">
-    <h2>Field Index</h2>
+    <div class="panel-header-row">
+      <h2>Field Index</h2>
+      <button class="panel-back-btn" id="close-index">Back</button>
+    </div>
     <p class="muted">BioBattle has no rock-paper-scissors element wheel — instead, individual WildByte and Project Hollowcross cards call out specific Elements or Mechanic types in their Overdrive Effects. This report doesn't reveal which exact cards do what (that's still yours to discover), but it does score how hard the deck as a whole leans on each type, so you know where to reinforce before you commit a BioCore.</p>
     <h2 style="margin-top:18px">By Element</h2>
     <div class="index-table">${elRows}</div>
@@ -1608,7 +1795,6 @@ function screenFieldIndex(){
     <p class="muted">Some threats punish a BioCore simply for carrying a GenMod of a certain Element, regardless of the BioCore's own type. Use this when deciding which GenMods to stack together.</p>
     <div class="index-table">${genmodRows}</div>
     ${rosterHtml}
-    <div class="btn-row"><button class="btn ghost" id="close-index">Back</button></div>
   </div>`;
 }
 
@@ -1621,6 +1807,58 @@ function updateTopRightCredit(){
   el.style.display = "block";
 }
 
+function screenCodex(){
+  const allKeys = Object.keys(ORGANISM_FACTS);
+  const total = allKeys.length;
+  const found = allKeys.filter(k=>codexSeen.has(k)).length;
+  const entries = allKeys.map(k=>{
+    const [type, name] = k.split(":");
+    const seen = codexSeen.has(k);
+    const f = ORGANISM_FACTS[k];
+    return `<div class="codex-entry${seen?"":" locked"}">
+      <div class="codex-name">${seen ? esc(name) : "???"}</div>
+      <div class="codex-fact">${seen ? esc(f.fact) : "Hover (or press-and-hold on mobile) over a card featuring this specimen to unlock its field note."}</div>
+      ${seen ? `<div class="codex-src">Source: ${esc(f.source)}</div>` : ""}
+    </div>`;
+  }).join("");
+
+  return `
+  <div class="brand"><h1>BIO<span>BATTLE</span></h1><small>CODEX</small></div>
+  <div class="panel">
+    <div class="panel-header-row">
+      <h2>Fun Fact Codex</h2>
+      <button class="panel-back-btn" id="back-to-title">Back to Menu</button>
+    </div>
+    <p class="muted">${found} / ${total} Field Notes discovered. Keep hovering (or press-and-holding on mobile) over cards during setup and battle to fill in the rest.</p>
+    <div class="codex-grid">${entries}</div>
+  </div>`;
+}
+
+function screenAchievements(){
+  const rows = ACHIEVEMENTS.map(a=>{
+    const unlocked = unlockedAchievements.has(a.id);
+    return `<div class="ach-entry${unlocked?"":" locked"}">
+      <div class="ach-icon">${unlocked ? "🏆" : "🔒"}</div>
+      <div class="ach-body">
+        <div class="ach-name">${esc(a.name)}</div>
+        <div class="ach-desc">${esc(a.desc)}</div>
+      </div>
+    </div>`;
+  }).join("");
+  const count = ACHIEVEMENTS.filter(a=>unlockedAchievements.has(a.id)).length;
+
+  return `
+  <div class="brand"><h1>BIO<span>BATTLE</span></h1><small>ACHIEVEMENTS</small></div>
+  <div class="panel">
+    <div class="panel-header-row">
+      <h2>Achievements</h2>
+      <button class="panel-back-btn" id="back-to-title">Back to Menu</button>
+    </div>
+    <p class="muted">${count} / ${ACHIEVEMENTS.length} unlocked.</p>
+    <div class="ach-grid">${rows}</div>
+  </div>`;
+}
+
 function screenTitle(){
   return `
   <div class="cover">
@@ -1629,6 +1867,8 @@ function screenTitle(){
     <div class="cover-btn-row">
       <button class="btn cover-btn" id="start-btn">Run Protocol</button>
       <button class="btn cover-btn ghost" id="open-index-nav">Field Index</button>
+      <button class="btn cover-btn ghost" id="open-codex">Codex</button>
+      <button class="btn cover-btn ghost" id="open-achievements">Achievements</button>
       <button class="btn cover-btn ghost" id="open-instructions">Instructions</button>
     </div>
   </div>
@@ -1650,7 +1890,10 @@ function screenInstructions(){
   return `
   <div class="brand"><h1>BIO<span>BATTLE</span></h1><small>INSTRUCTIONS</small></div>
   <div class="panel">
-    <h2>Outlast Project Hollowcross</h2>
+    <div class="panel-header-row">
+      <h2>Outlast Project Hollowcross</h2>
+      <button class="panel-back-btn" id="back-to-title">Back</button>
+    </div>
     <p>You are issued two BioCores from the field archive. Enhance them with GenMods,
     survive three WildByte incursions, navigate Chaos Draws, and
     defeat two Project Hollowcross bioweapons to win.</p>
@@ -1709,9 +1952,6 @@ function screenInstructions(){
       <li>Fall short, and your BioCore takes damage instead</li>
       <li>If its DEF drops to zero, it's lost for good</li>
     </ol>
-    <div class="btn-row">
-      <button class="btn" id="back-to-title">Back</button>
-    </div>
   </div>
   <footer class="credit">Game Design and Development by Shivam Mohite<br>Creative Design by Aditi Rishiraj, Neethu Mariam, V. Sai Pallavi</footer>`;
 }
@@ -1737,7 +1977,10 @@ function screenSetup(){
   <div class="brand"><h1>BIO<span>BATTLE</span></h1><small>SETUP</small></div>
   ${progressBar()}
   <div class="panel">
-    <h2>Assign your GenMods</h2>
+    <div class="panel-header-row">
+      <h2>Assign your GenMods</h2>
+      <button class="panel-back-btn" id="back-to-title">Back to Menu</button>
+    </div>
     <p class="muted">You may stack both GenMods on one BioCore, or split them. This choice is permanent for the run. Not sure what beats what? Check the <a href="#" id="open-index-setup" style="color:var(--signal)">Field Index</a>.</p>
     ${hoverHintHTML()}
     <div class="card-grid">${gmHtml}</div>
@@ -1745,7 +1988,6 @@ function screenSetup(){
     <div class="card-grid">${bcHtml}</div>
     <div class="btn-row">
       <button class="btn" id="confirm-setup" ${done?"":"disabled"}>Begin WildByte Trials</button>
-      <button class="btn ghost" id="back-to-title">Back to Menu</button>
     </div>
   </div>`;
 }
@@ -1948,6 +2190,10 @@ function screenChaos(){
 }
 
 function screenEnd(){
+  if(!state._achievementsEvaluated){
+    state.newlyUnlocked = evaluateAchievements();
+    state._achievementsEvaluated = true;
+  }
   const win = state.gameOverText === "win";
   const isDeadlock = state.gameOverText === "lose-deadlock";
   const survivors = aliveRoster();
@@ -1959,12 +2205,21 @@ function screenEnd(){
     : (isDeadlock
         ? `<p>Every remaining BioCore was disabled by Chaos Factor and Overdrive effects going into this Hollowcross encounter, leaving no valid move. ${defeats} of 2 Hollowcross bioweapons were neutralized before the end.</p>`
         : `<p>Every BioCore in your roster fell before the mission could be completed. ${defeats} of 2 Hollowcross bioweapons were neutralized before the end.</p>`);
+  const newAchHtml = (state.newlyUnlocked && state.newlyUnlocked.length) ? `
+    <div class="ach-unlocked-banner">
+      <div class="ach-unlocked-title">🏆 New Achievement${state.newlyUnlocked.length>1?"s":""} Unlocked</div>
+      ${state.newlyUnlocked.map(a=>`<div class="ach-unlocked-item"><b>${esc(a.name)}</b> — ${esc(a.desc)}</div>`).join("")}
+    </div>` : "";
   return `
   <div class="brand"><h1>BIO<span>BATTLE</span></h1><small>RUN COMPLETE</small></div>
   <div class="panel">
     <div class="result-banner ${win?"win":"lose"}">${bannerText}</div>
     ${bodyText}
-    <div class="btn-row"><button class="btn" id="again-btn">Start New Run</button></div>
+    ${newAchHtml}
+    <div class="btn-row">
+      <button class="btn" id="again-btn">Start New Run</button>
+      <button class="btn ghost" id="share-result-btn">Download Result Card</button>
+    </div>
   </div>
   <footer class="credit">Game Design and Development by Shivam Mohite<br>Creative Design by Aditi Rishiraj, Neethu Mariam, V. Sai Pallavi</footer>`;
 }
@@ -2030,6 +2285,9 @@ function attachHandlers(){
   const againBtn = document.getElementById("again-btn");
   if(againBtn) againBtn.onclick = ()=>{ newRun(); render(); };
 
+  const shareResultBtn = document.getElementById("share-result-btn");
+  if(shareResultBtn) shareResultBtn.onclick = downloadResultCard;
+
   const enterBossPhaseBtn = document.getElementById("enter-boss-phase");
   if(enterBossPhaseBtn) enterBossPhaseBtn.onclick = beginBossPhase;
 
@@ -2039,6 +2297,11 @@ function attachHandlers(){
   const closeIndex = document.getElementById("close-index");
   if(closeIndex) closeIndex.onclick = ()=>{ state.screen = state.previousScreen || "title"; render(); };
 
+  const openCodex = document.getElementById("open-codex");
+  if(openCodex) openCodex.onclick = ()=>{ state.previousScreen = state.screen; state.screen = "codex"; render(); };
+  const openAchievements = document.getElementById("open-achievements");
+  if(openAchievements) openAchievements.onclick = ()=>{ state.previousScreen = state.screen; state.screen = "achievements"; render(); };
+
   const openInstructions = document.getElementById("open-instructions");
   if(openInstructions) openInstructions.onclick = ()=>{ state.screen = "instructions"; render(); };
   const backToTitle = document.getElementById("back-to-title");
@@ -2047,23 +2310,46 @@ function attachHandlers(){
   app.querySelectorAll(".card-frame").forEach(frame=>{
     const tip = frame.querySelector(".fact-tip");
     if(!tip) return;
+    const type = frame.getAttribute("data-fact-type");
+    const name = frame.getAttribute("data-fact-name");
+    const base = frame.getAttribute("data-fact-base");
     let hoverTimer = null;
+    let touchRevealed = false;
+    function revealTip(){
+      const f = getFact(type, name, base);
+      tip.innerHTML = f
+        ? `<div class="fact-label">Field Note — ${esc(name)}</div>${esc(f.fact)}<div class="fact-src">Source: ${esc(f.source)}</div>`
+        : `<div class="fact-label">Field Note — ${esc(name)}</div>No catalogued field data for this specimen yet.`;
+      tip.classList.add("show");
+      markFactSeen(type, name, base);
+    }
     frame.addEventListener("mouseenter", ()=>{
-      hoverTimer = setTimeout(()=>{
-        const type = frame.getAttribute("data-fact-type");
-        const name = frame.getAttribute("data-fact-name");
-        const base = frame.getAttribute("data-fact-base");
-        const f = getFact(type, name, base);
-        tip.innerHTML = f
-          ? `<div class="fact-label">Field Note — ${esc(name)}</div>${esc(f.fact)}<div class="fact-src">Source: ${esc(f.source)}</div>`
-          : `<div class="fact-label">Field Note — ${esc(name)}</div>No catalogued field data for this specimen yet.`;
-        tip.classList.add("show");
-      }, 2000);
+      hoverTimer = setTimeout(revealTip, 2000);
     });
     frame.addEventListener("mouseleave", ()=>{
       clearTimeout(hoverTimer);
       tip.classList.remove("show");
     });
+    // Touch equivalent: press and hold (~500ms) reveals the fact tip without
+    // triggering the card's normal tap action (select/assign). A quick tap
+    // still passes through as a normal click.
+    frame.addEventListener("touchstart", ()=>{
+      touchRevealed = false;
+      hoverTimer = setTimeout(()=>{
+        revealTip();
+        touchRevealed = true;
+      }, 500);
+    }, {passive:true});
+    frame.addEventListener("touchend", (e)=>{
+      clearTimeout(hoverTimer);
+      if(touchRevealed){
+        e.preventDefault();
+        setTimeout(()=>{ tip.classList.remove("show"); touchRevealed=false; }, 1800);
+      }
+    });
+    frame.addEventListener("touchmove", ()=>{
+      clearTimeout(hoverTimer);
+    }, {passive:true});
   });
 }
 
