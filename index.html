@@ -233,7 +233,7 @@ body{
   .card{
     position:relative; border-radius:8px; padding:0; border:none;
     background-color: var(--card-color,#274);
-    overflow:hidden; width:100%; max-width:150px; margin:0 auto; line-height:0;
+    overflow:hidden; width:100%; max-width:190px; margin:0 auto; line-height:0;
     box-shadow:0 8px 18px rgba(0,0,0,.45);
     color:var(--card-cream);
     }
@@ -242,7 +242,7 @@ body{
 
   .card-img-fallback{
     display:flex; align-items:center; justify-content:center; text-align:center; aspect-ratio:504/731;
-    font-family:'Playfair Display',serif; font-weight:700; font-size:.85rem; padding:10%; color:var(--card-cream);
+    font-family:'Playfair Display',serif; font-weight:700; font-size:1.05rem; padding:10%; color:var(--card-cream);
   }
 
 
@@ -255,7 +255,7 @@ body{
   .stat-overlay{
     position:absolute; top:84.5%; height:6%; width:25%;
     display:flex; align-items:center; justify-content:center;
-    font-family:'Playfair Display',serif; font-weight:700; font-size:13px; line-height:1;
+    font-family:'Playfair Display',serif; font-weight:700; font-size:16px; line-height:1;
     white-space:nowrap; color:var(--card-cream);
     text-shadow:0 1px 2px rgba(0,0,0,.35);
   }
@@ -267,7 +267,7 @@ body{
 <style>
 
 
-  .card-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:12px; margin-top:14px; }
+  .card-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:14px; }
 
   .card-grid.grid-2{ grid-template-columns:1fr 1fr; }
 
@@ -294,23 +294,23 @@ body{
 
 
   /* ---------- card hover tooltip (field-fact reveal after 2s hover) ---------- */
-  .card-frame{ position:relative; max-width:150px; margin:0 auto; }
+  .card-frame{ position:relative; max-width:190px; margin:0 auto; }
 
   .card-frame .card{ max-width:100%; }
 
   .fact-tip{
     position:absolute; left:50%; bottom:calc(100% + 10px); transform:translateX(-50%) translateY(6px);
-    width:230px; background:var(--panel-2); border:1px solid var(--signal-dim); border-radius:10px;
-    padding:12px 14px; font-family:'Inter',sans-serif; font-size:.74rem; line-height:1.45; color:var(--cream);
+    width:280px; background:var(--panel-2); border:1px solid var(--signal-dim); border-radius:10px;
+    padding:14px 16px; font-family:'Inter',sans-serif; font-size:.9rem; line-height:1.5; color:var(--cream);
     box-shadow:0 12px 28px rgba(0,0,0,.5); opacity:0; pointer-events:none; z-index:20;
     transition:opacity .25s ease, transform .25s ease;
   }
 
   .fact-tip.show{ opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
 
-  .fact-tip .fact-label{ font-family:'IBM Plex Mono',monospace; font-size:.6rem; letter-spacing:.1em; color:var(--signal); text-transform:uppercase; margin-bottom:4px; }
+  .fact-tip .fact-label{ font-family:'IBM Plex Mono',monospace; font-size:.72rem; letter-spacing:.1em; color:var(--signal); text-transform:uppercase; margin-bottom:4px; }
 
-  .fact-tip .fact-src{ font-family:'IBM Plex Mono',monospace; font-size:.6rem; color:var(--muted); margin-top:6px; }
+  .fact-tip .fact-src{ font-family:'IBM Plex Mono',monospace; font-size:.72rem; color:var(--muted); margin-top:6px; }
 
   .fact-tip::after{
     content:""; position:absolute; top:100%; left:50%; transform:translateX(-50%);
@@ -1964,7 +1964,7 @@ function screenInstructions(){
 }
 
 function hoverHintHTML(){
-  return `<p class="muted" style="font-size:.74rem;margin-top:8px">💡 Hover over any card for 2 seconds to reveal a real-world fact about the organism or function it's based on.</p>`;
+  return `<p class="muted" style="font-size:.74rem;margin-top:8px">💡 Hover over any card for 1 second to reveal a real-world fact about the organism or function it's based on.</p>`;
 }
 
 function screenSetup(){
@@ -2066,14 +2066,14 @@ function screenFightResult(){
       }).join("");
       bonusHtml = `
         <h2 style="margin-top:20px;color:var(--signal)">Bonus GenMod Recovered — Assign it to a BioCore</h2>
-        <div class="card-frame" style="max-width:150px;margin:12px auto 0">${genmodCardHTML(pendingGm, -1, false)}</div>
+        <div class="card-frame" style="max-width:190px;margin:12px auto 0">${genmodCardHTML(pendingGm, -1, false)}</div>
         <div class="pick-list" style="margin-top:12px">${targets}</div>`;
     }
 
     bodyHtml = `
       <p><b>${esc(f.coreName)}</b> neutralized <b>${esc(f.enemyName)}</b> — and it didn't go quietly.</p>
       <h2 style="margin-top:14px;font-size:.95rem">New Ally Assimilated</h2>
-      <div class="card-frame" style="max-width:150px;margin:12px auto 0">${biocoreCardHTML(newAlly)}</div>
+      <div class="card-frame" style="max-width:190px;margin:12px auto 0">${biocoreCardHTML(newAlly)}</div>
       <p class="muted" style="margin-top:14px;text-align:center;font-style:italic">${esc(teaser)}</p>
       ${bonusHtml}
       ${hoverHintHTML()}`;
@@ -2331,7 +2331,7 @@ function attachHandlers(){
       markFactSeen(type, name, base);
     }
     frame.addEventListener("mouseenter", ()=>{
-      hoverTimer = setTimeout(revealTip, 2000);
+     hoverTimer = setTimeout(revealTip, 1000);
     });
     frame.addEventListener("mouseleave", ()=>{
       clearTimeout(hoverTimer);
