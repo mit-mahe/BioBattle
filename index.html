@@ -1794,6 +1794,7 @@ function screenFieldIndex(){
       <button class="panel-back-btn" id="close-index">Back</button>
     </div>
     <p class="muted">BioBattle has no rock-paper-scissors element wheel — instead, individual WildByte and Project Hollowcross cards call out specific Elements or Mechanic types in their Overdrive Effects. This report doesn't reveal which exact cards do what (that's still yours to discover), but it does score how hard the deck as a whole leans on each type, so you know where to reinforce before you commit a BioCore.</p>
+    ${rosterHtml}
     <h2 style="margin-top:18px">By Element</h2>
     <div class="index-table">${elRows}</div>
     <h2 style="margin-top:18px">By Mechanic Type</h2>
@@ -1801,7 +1802,6 @@ function screenFieldIndex(){
     <h2 style="margin-top:18px">Equipped GenMod Risk</h2>
     <p class="muted">Some threats punish a BioCore simply for carrying a GenMod of a certain Element, regardless of the BioCore's own type. Use this when deciding which GenMods to stack together.</p>
     <div class="index-table">${genmodRows}</div>
-    ${rosterHtml}
   </div>`;
 }
 
