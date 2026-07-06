@@ -1111,6 +1111,35 @@ const state = {
 
 function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function draw(arr,n){ return shuffle(arr).slice(0,n).map(o=>({...o})); }
+/* ---------- save / restore across reloads ---------- */
+const SAVE_KEY = "biobattle_save_v1";
+
+function persistState(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+function rehydrateFx(list, master){
+  return (list||[]).map(item=>{
+    const found = master.find(m=>m.name===item.name);
+    return found ? {...item, fx: found.fx} : item;
+  });
+}
+
+function loadPersistedState(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return false;
+    const saved = JSON.parse(raw);
+    Object.assign(state, saved);
+    state.wbQueue = rehydrateFx(state.wbQueue, WILDBYTES);
+    state.chaosDrawn = rehydrateFx(state.chaosDrawn, CHAOS);
+    if(state.currentBoss){
+      const foundBoss = BOSSES.find(b=>b.name===state.currentBoss.name);
+      if(foundBoss) state.currentBoss = {...state.currentBoss, fx: foundBoss.fx};
+    }
+    return true;
+  }catch(e){ return false; }
+}
 
 function newRun(){
   const cores = draw(BIOCORES,2).map(c=>({
@@ -1336,7 +1365,17 @@ function proceedToBoss(){ state.phase = "boss"; state.screen = "pick"; render();
 /* ============================ RENDER ============================ */
 
 const app = document.getElementById("app");
-function render(){ app.innerHTML = renderScreen(); attachHandlers(); updateTopRightCredit(); }
+function render(){
+  app.innerHTML = renderScreen();
+  attachHandlers();
+  updateTopRightCredit();
+  persistState();
+  try{
+    if(location.hash.slice(1) !== state.screen){
+      history.replaceState(null, "", "#"+state.screen);
+    }
+  }catch(e){}
+}
 
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
 
@@ -2360,6 +2399,7 @@ function attachHandlers(){
   });
 }
 
+loadPersistedState();
 render();
 </script>
 </body>
