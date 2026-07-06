@@ -1770,7 +1770,7 @@ function screenFieldIndex(){
     </div>
     <div class="index-tip">${esc(g.tip)}</div>`).join("");
 
-  const rosterHtml = rosterReport.length ? `
+const rosterHtml = (rosterReport.length && state.previousScreen !== "title") ? `
     <h2 style="margin-top:18px">Your Current Roster</h2>
     <p class="muted">These readings are specific to the BioCores and GenMods you're running right now.</p>
     <div class="index-table">
