@@ -194,6 +194,7 @@ body{
     background:rgba(208,244,234,0.08); border:1px solid var(--signal-dim); border-radius:8px;
     padding:10px 14px; font-size:.82rem; color:var(--cream); margin:0 0 14px; line-height:1.5;
   }
+  .page-hint.hidden{ display:none; }
 
   .panel-header-row{
     display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -381,6 +382,16 @@ body{
     pointer-events:none;
   }
 
+  .global-info-btn{
+    position:absolute; top:12px; right:16px; z-index:6;
+    width:30px; height:30px; border-radius:50%; border:1.5px solid var(--signal);
+    background:rgba(17,23,34,0.85); color:var(--signal); font-family:'Space Grotesk',sans-serif;
+    font-weight:700; font-size:.9rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:background .15s ease, transform .12s ease;
+  }
+  .global-info-btn:hover{ background:var(--signal); color:#05140f; transform:scale(1.08); }
+  .global-info-btn.active{ background:var(--signal); color:#05140f; }
+
 
   /* ---------- phase transition ---------- */
   .transition-screen{
@@ -533,6 +544,7 @@ body{
 </div>
 <div class="wrap" id="app"></div>
 <div class="top-right-credit" id="top-right-credit" style="display:none">Adapted from BioBattle - Manipal BioMachines</div>
+<button id="global-info-btn" class="global-info-btn" aria-label="Show help for this screen" title="Show help for this screen">i</button>
 <script>
 function showLoader(){
   const el = document.getElementById("app-loader");
@@ -546,6 +558,15 @@ if(document.readyState === "complete"){
   hideLoader();
 } else {
   window.addEventListener("load", hideLoader);
+}
+
+const globalInfoBtn = document.getElementById("global-info-btn");
+if(globalInfoBtn){
+  globalInfoBtn.onclick = ()=>{
+    hintOpen = !hintOpen;
+    hintOpenScreen = state.screen;
+    render();
+  };
 }
 
 const CARD_IMAGES = {"biocore:Owl": {"src": "images/biocore_Owl.jpg", "color": "#6489c2"}, "biocore:Bat": {"src": "images/biocore_Bat.jpg", "color": "#6489c3"}, "biocore:Parrot": {"src": "images/biocore_Parrot.jpg", "color": "#6389c3"}, "biocore:Pigeon": {"src": "images/biocore_Pigeon.jpg", "color": "#6489c1"}, "biocore:Hawk": {"src": "images/biocore_Hawk.jpg", "color": "#6488c4"}, "biocore:Eagle": {"src": "images/biocore_Eagle.jpg", "color": "#6688c1"}, "biocore:Dandelion": {"src": "images/biocore_Dandelion.jpg", "color": "#638ac3"}, "biocore:Falcon": {"src": "images/biocore_Falcon.jpg", "color": "#a16516"}, "biocore:Rabbit": {"src": "images/biocore_Rabbit.jpg", "color": "#a26518"}, "biocore:Fox": {"src": "images/biocore_Fox.jpg", "color": "#a26418"}, "biocore:Cheetah": {"src": "images/biocore_Cheetah.jpg", "color": "#a26519"}, "biocore:Hyena": {"src": "images/biocore_Hyena.jpg", "color": "#a16519"}, "biocore:Elephant": {"src": "images/biocore_Elephant.jpg", "color": "#194c26"}, "biocore:Lion": {"src": "images/biocore_Lion.jpg", "color": "#1a4c26"}, "biocore:Tortoise": {"src": "images/biocore_Tortoise.jpg", "color": "#1a4d27"}, "biocore:Kangaroo": {"src": "images/biocore_Kangaroo.jpg", "color": "#1b4c26"}, "biocore:Meerkat": {"src": "images/biocore_Meerkat.jpg", "color": "#1a4c26"}, "biocore:Armadillo": {"src": "images/biocore_Armadillo.jpg", "color": "#194c26"}, "biocore:Baobab Tree": {"src": "images/biocore_Baobab_Tree.jpg", "color": "#1a4c26"}, "biocore:Cactus": {"src": "images/biocore_Cactus.jpg", "color": "#184d26"}, "biocore:Venus Fly Trap": {"src": "images/biocore_Venus_Fly_Trap.jpg", "color": "#1a4c26"}, "biocore:Tiger": {"src": "images/biocore_Tiger.jpg", "color": "#7a0c11"}, "biocore:Cobra": {"src": "images/biocore_Cobra.jpg", "color": "#7a0c10"}, "biocore:Buffalo": {"src": "images/biocore_Buffalo.jpg", "color": "#7b0b12"}, "biocore:Honey Badger": {"src": "images/biocore_Honey_Badger.jpg", "color": "#7b0c12"}, "biocore:Rooster": {"src": "images/biocore_Rooster.jpg", "color": "#7c0c12"}, "biocore:Komodo Dragon": {"src": "images/biocore_Komodo_Dragon.jpg", "color": "#7b0c10"}, "biocore:Fireweed": {"src": "images/biocore_Fireweed.jpg", "color": "#7a0c10"}, "biocore:Wild Cherry Tree": {"src": "images/biocore_Wild_Cherry_Tree.jpg", "color": "#7c0b12"}, "biocore:Dolphin": {"src": "images/biocore_Dolphin.jpg", "color": "#224576"}, "biocore:Sea Turtle": {"src": "images/biocore_Sea_Turtle.jpg", "color": "#214577"}, "biocore:Penguin": {"src": "images/biocore_Penguin.jpg", "color": "#214776"}, "biocore:Shark": {"src": "images/biocore_Shark.jpg", "color": "#214777"}, "biocore:Crocodile": {"src": "images/biocore_Crocodile.jpg", "color": "#204675"}, "biocore:Giant Kelp": {"src": "images/biocore_Giant_Kelp.jpg", "color": "#214579"}, "biocore:Lotus": {"src": "images/biocore_Lotus.jpg", "color": "#224679"}, "genmod:Feather Shield": {"src": "images/genmod_Feather_Shield.jpg", "color": "#6e93c7"}, "genmod:Dive Strike": {"src": "images/genmod_Dive_Strike.jpg", "color": "#6f93c8"}, "genmod:Wind Dance": {"src": "images/genmod_Wind_Dance.jpg", "color": "#6f93c7"}, "genmod:Glide Boost": {"src": "images/genmod_Glide_Boost.jpg", "color": "#6f93c8"}, "genmod:Air Drift": {"src": "images/genmod_Air_Drift.jpg", "color": "#6f94c8"}, "genmod:Swoop Ambush": {"src": "images/genmod_Swoop_Ambush.jpg", "color": "#6e93c7"}, "genmod:Night Echo": {"src": "images/genmod_Night_Echo.jpg", "color": "#6f93c8"}, "genmod:Razor Beak": {"src": "images/genmod_Razor_Beak.jpg", "color": "#6f92c6"}, "genmod:Sprint Boost": {"src": "images/genmod_Sprint_Boost.jpg", "color": "#ac7024"}, "genmod:Reflex Twist": {"src": "images/genmod_Reflex_Twist.jpg", "color": "#ac7026"}, "genmod:Agile Leap": {"src": "images/genmod_Agile_Leap.jpg", "color": "#ac7025"}, "genmod:Sonic Dash": {"src": "images/genmod_Sonic_Dash.jpg", "color": "#ac7026"}, "genmod:Sharp Hearing": {"src": "images/genmod_Sharp_Hearing.jpg", "color": "#ac7025"}, "genmod:Shadowstep": {"src": "images/genmod_Shadowstep.jpg", "color": "#ac7025"}, "genmod:Sudden Strike": {"src": "images/genmod_Sudden_Strike.jpg", "color": "#ad7026"}, "genmod:Sprint Cloak": {"src": "images/genmod_Sprint_Cloak.jpg", "color": "#ac7026"}, "genmod:Electric Jolt": {"src": "images/genmod_Electric_Jolt.jpg", "color": "#ad7024"}, "genmod:Mimic Burst": {"src": "images/genmod_Mimic_Burst.jpg", "color": "#ac7024"}, "genmod:Pack Tactics": {"src": "images/genmod_Pack_Tactics.jpg", "color": "#ac7024"}, "genmod:Touch Reflex": {"src": "images/genmod_Touch_Reflex.jpg", "color": "#ad7026"}, "genmod:Ion Pulse": {"src": "images/genmod_Ion_Pulse.jpg", "color": "#ac7025"}, "genmod:Venom Bite": {"src": "images/genmod_Venom_Bite.jpg", "color": "#891c20"}, "genmod:Intimidation Aura": {"src": "images/genmod_Intimidation_Aura.jpg", "color": "#891d20"}, "genmod:Fire Instinct": {"src": "images/genmod_Fire_Instinct.jpg", "color": "#891c1f"}, "genmod:Rage Pulse": {"src": "images/genmod_Rage_Pulse.jpg", "color": "#871d20"}, "genmod:Battle Rooster": {"src": "images/genmod_Battle_Rooster.jpg", "color": "#891c22"}, "genmod:Scorch Pounce": {"src": "images/genmod_Scorch_Pounce.jpg", "color": "#8a1d21"}, "genmod:Crimson Charge": {"src": "images/genmod_Crimson_Charge.jpg", "color": "#871d20"}, "genmod:Fearless Charge": {"src": "images/genmod_Fearless_Charge.jpg", "color": "#871d20"}, "genmod:Claw Cyclone": {"src": "images/genmod_Claw_Cyclone.jpg", "color": "#881d22"}, "genmod:Slippery Skin": {"src": "images/genmod_Slippery_Skin.jpg", "color": "#305583"}, "genmod:Sharp Jaws": {"src": "images/genmod_Sharp_Jaws.jpg", "color": "#315583"}, "genmod:Streamline": {"src": "images/genmod_Streamline.jpg", "color": "#305583"}, "genmod:Flipper Dash": {"src": "images/genmod_Flipper_Dash.jpg", "color": "#325483"}, "genmod:Freeze Coat": {"src": "images/genmod_Freeze_Coat.jpg", "color": "#315684"}, "genmod:Amphibian Surge": {"src": "images/genmod_Amphibian_Surge.jpg", "color": "#305483"}, "genmod:Water Glide": {"src": "images/genmod_Water_Glide.jpg", "color": "#305582"}, "genmod:Snap Reflex": {"src": "images/genmod_Snap_Reflex.jpg", "color": "#305483"}, "genmod:Buoyant Tangles": {"src": "images/genmod_Buoyant_Tangles.jpg", "color": "#315383"}, "genmod:Toxin Filter": {"src": "images/genmod_Toxin_Filter.jpg", "color": "#305582"}, "genmod:Burrow Claws": {"src": "images/genmod_Burrow_Claws.jpg", "color": "#295b36"}, "genmod:Rock Hide": {"src": "images/genmod_Rock_Hide.jpg", "color": "#2b5d37"}, "genmod:Dust Camo": {"src": "images/genmod_Dust_Camo.jpg", "color": "#295b37"}, "genmod:Tusker Boost": {"src": "images/genmod_Tusker_Boost.jpg", "color": "#2b5b35"}, "genmod:Tremor Kick": {"src": "images/genmod_Tremor_Kick.jpg", "color": "#2b5c36"}, "genmod:Armor Scales": {"src": "images/genmod_Armor_Scales.jpg", "color": "#285c36"}, "genmod:Herd Shield": {"src": "images/genmod_Herd_Shield.jpg", "color": "#2a5c36"}, "genmod:Root Grip": {"src": "images/genmod_Root_Grip.jpg", "color": "#285c36"}, "genmod:Territorial Roar": {"src": "images/genmod_Territorial_Roar.jpg", "color": "#285b36"}, "genmod:Ground Slam": {"src": "images/genmod_Ground_Slam.jpg", "color": "#2a5c36"}, "genmod:Scent Tracking": {"src": "images/genmod_Scent_Tracking.jpg", "color": "#2a5c36"}, "genmod:Deeprooting": {"src": "images/genmod_Deeprooting.jpg", "color": "#2a5c36"}, "genmod:Spineburst": {"src": "images/genmod_Spineburst.jpg", "color": "#2a5c36"}, "wildbyte:Influenza Virus": {"src": "images/wildbyte_Influenza_Virus.jpg", "color": "#6489c4"}, "wildbyte:Mosquito Swarm": {"src": "images/wildbyte_Mosquito_Swarm.jpg", "color": "#638ac3"}, "wildbyte:Myiasis Flies": {"src": "images/wildbyte_Myiasis_Flies.jpg", "color": "#628ac2"}, "wildbyte:Tsetse Fly": {"src": "images/wildbyte_Tsetse_Fly.jpg", "color": "#6489c1"}, "wildbyte:Avian Flu (H5N1)": {"src": "images/img_95.jpg", "color": "#6389c3"}, "wildbyte:M. Tuberculosis": {"src": "images/img_96.jpg", "color": "#638ac3"}, "wildbyte:Dengue Virus": {"src": "images/wildbyte_Dengue_Virus.jpg", "color": "#628ac2"}, "wildbyte:Cone Snail": {"src": "images/wildbyte_Cone_Snail.jpg", "color": "#a26518"}, "wildbyte:Clostridium Botulinum": {"src": "images/wildbyte_Clostridium_Botulinum.jpg", "color": "#a26517"}, "wildbyte:Neurotoxic Algae Bloom": {"src": "images/wildbyte_Neurotoxic_Algae_Bloom.jpg", "color": "#a16519"}, "wildbyte:Electric Eel Frenzy": {"src": "images/wildbyte_Electric_Eel_Frenzy.jpg", "color": "#a36418"}, "wildbyte:Fire Ant Swarm": {"src": "images/wildbyte_Fire_Ant_Swarm.jpg", "color": "#7b0c10"}, "wildbyte:Bullet Ant Swarm": {"src": "images/wildbyte_Bullet_Ant_Swarm.jpg", "color": "#7c0b12"}, "wildbyte:Snake Venom": {"src": "images/wildbyte_Snake_Venom.jpg", "color": "#7b0c12"}, "wildbyte:Rabies Virus": {"src": "images/wildbyte_Rabies_Virus.jpg", "color": "#7c0c11"}, "wildbyte:Leaf Blight Fungus": {"src": "images/wildbyte_Leaf_Blight_Fungus.jpg", "color": "#7d0b10"}, "wildbyte:Komodo Bite": {"src": "images/wildbyte_Komodo_Bite.jpg", "color": "#7b0c10"}, "wildbyte:Sea Lamprey": {"src": "images/wildbyte_Sea_Lamprey.jpg", "color": "#204678"}, "wildbyte:Vibrio Cholerae": {"src": "images/wildbyte_Vibrio_Cholerae.jpg", "color": "#214578"}, "wildbyte:Lionfish Invasion": {"src": "images/wildbyte_Lionfish_Invasion.jpg", "color": "#214578"}, "wildbyte:Pufferfish Poison": {"src": "images/wildbyte_Pufferfish_Poison.jpg", "color": "#224578"}, "wildbyte:Giardia Lamblia": {"src": "images/wildbyte_Giardia_Lamblia.jpg", "color": "#214478"}, "wildbyte:Tapeworm Cluster": {"src": "images/wildbyte_Tapeworm_Cluster.jpg", "color": "#194b26"}, "wildbyte:Root-Knot Nematode": {"src": "images/img_114.jpg", "color": "#1a4b26"}, "wildbyte:Cordyceps Fungus": {"src": "images/wildbyte_Cordyceps_Fungus.jpg", "color": "#194c26"}, "wildbyte:Filarial Worm": {"src": "images/wildbyte_Filarial_Worm.jpg", "color": "#194d27"}, "wildbyte:Brown Recluse Spider": {"src": "images/wildbyte_Brown_Recluse_Spider.jpg", "color": "#194c26"}, "wildbyte:Anthrax Spores": {"src": "images/wildbyte_Anthrax_Spores.jpg", "color": "#194d26"}, "wildbyte:Candida Auris": {"src": "images/wildbyte_Candida_Auris.jpg", "color": "#1a4c26"}, "wildbyte:Hookworm": {"src": "images/wildbyte_Hookworm.jpg", "color": "#184d26"}, "wildbyte:Rinderpest Virus": {"src": "images/wildbyte_Rinderpest_Virus.jpg", "color": "#1b4c27"}, "wildbyte:Chagas Parasite": {"src": "images/wildbyte_Chagas_Parasite.jpg", "color": "#1b4c26"}, "wildbyte:Botfly Larva": {"src": "images/wildbyte_Botfly_Larva.jpg", "color": "#1b4c26"}, "wildbyte:Red Tide Bloom": {"src": "images/wildbyte_Red_Tide_Bloom.jpg", "color": "#224579"}, "wildbyte:Chytrid Fungus": {"src": "images/wildbyte_Chytrid_Fungus.jpg", "color": "#234579"}, "boss:MycoOmega": {"src": "images/boss_MycoOmega.jpg", "color": "#335b57"}, "boss:NeuroSentinel": {"src": "images/boss_NeuroSentinel.jpg", "color": "#335b56"}, "boss:VerdraXX": {"src": "images/boss_VerdraXX.jpg", "color": "#335a57"}, "boss:FlameWheel": {"src": "images/boss_FlameWheel.jpg", "color": "#345b57"}, "boss:KryoVenin": {"src": "images/boss_KryoVenin.jpg", "color": "#315c55"}, "boss:IgniVarus": {"src": "images/boss_IgniVarus.jpg", "color": "#335b58"}, "boss:CryoDrac": {"src": "images/boss_CryoDrac.jpg", "color": "#345b57"}, "boss:CarnoTex": {"src": "images/boss_CarnoTex.jpg", "color": "#315c57"}, "boss:FaeNexus": {"src": "images/boss_FaeNexus.jpg", "color": "#345b57"}, "boss:ClawBeast": {"src": "images/boss_ClawBeast.jpg", "color": "#315c55"}, "boss:InfernaBloom": {"src": "images/boss_InfernaBloom.jpg", "color": "#315c55"}, "boss:SirenDelta": {"src": "images/boss_SirenDelta.jpg", "color": "#335b58"}, "boss:FloraPrime": {"src": "images/boss_FloraPrime.jpg", "color": "#335a57"}, "boss:EclipseStrain": {"src": "images/boss_EclipseStrain.jpg", "color": "#345b57"}, "boss:CereBug": {"src": "images/boss_CereBug.jpg", "color": "#325c57"}, "boss:GravitTide": {"src": "images/boss_GravitTide.jpg", "color": "#335b58"}, "boss:LeechMatrix": {"src": "images/boss_LeechMatrix.jpg", "color": "#345b57"}, "boss:NeuroSeraph": {"src": "images/boss_NeuroSeraph.jpg", "color": "#335b58"}, "boss:LambdaMyco": {"src": "images/boss_LambdaMyco.jpg", "color": "#335a57"}, "boss:WidowWhelix": {"src": "images/boss_WidowWhelix.jpg", "color": "#335a57"}, "boss:DroneV3": {"src": "images/boss_DroneV3.jpg", "color": "#325c57"}, "chaos:Gene Surge": {"src": "images/chaos_Gene_Surge.jpg", "color": "#621648"}, "chaos:Biosurge": {"src": "images/chaos_Biosurge.jpg", "color": "#621647"}, "chaos:Shield Protocol": {"src": "images/chaos_Shield_Protocol.jpg", "color": "#621647"}, "chaos:Power Sync": {"src": "images/chaos_Power_Sync.jpg", "color": "#621648"}, "chaos:Second Wind": {"src": "images/chaos_Second_Wind.jpg", "color": "#621648"}, "chaos:Weak Pulse": {"src": "images/chaos_Weak_Pulse.jpg", "color": "#100c23"}, "chaos:Core Decay": {"src": "images/chaos_Core_Decay.jpg", "color": "#100c23"}, "chaos:Drained Shell": {"src": "images/chaos_Drained_Shell.jpg", "color": "#100c23"}, "chaos:Hijack": {"src": "images/chaos_Hijack.jpg", "color": "#100c22"}, "chaos:Gene Clash": {"src": "images/chaos_Gene_Clash.jpg", "color": "#a24019"}, "chaos:Split Surge": {"src": "images/chaos_Split_Surge.jpg", "color": "#a33e1c"}, "chaos:Dual Pulse": {"src": "images/chaos_Dual_Pulse.jpg", "color": "#a23f1c"}};
@@ -1402,12 +1423,18 @@ function render(){
   app.innerHTML = renderScreen();
   attachHandlers();
   updateTopRightCredit();
+  syncInfoBtn();
   persistState();
   try{
     if(location.hash.slice(1) !== state.screen){
       history.replaceState(null, "", "#"+state.screen);
     }
   }catch(e){}
+}
+
+function syncInfoBtn(){
+  const btn = document.getElementById("global-info-btn");
+  if(btn) btn.classList.toggle("active", hintOpen);
 }
 
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
@@ -1949,7 +1976,7 @@ function screenTitle(){
   <div class="cover">
     <div class="cover-title"><span class="cover-bio">BIO</span><span class="cover-battle">BATTLE</span></div>
     <div class="cover-tagline">SYNTHETIC BIOLOGY // SOLO PROTOCOL</div>
-    <div class="page-hint" style="max-width:420px">🧭 New here? Tap Play to start playing. Strategy Manual, Explorer's Log, and Achievements are just for browsing — you can check them anytime, they won't change your game.</div>
+    ${pageHint("New here? Tap Play to start playing. Strategy Manual, Explorer's Log, and Achievements are just for browsing — you can check them anytime, they won't change your game.", "max-width:420px")}
     <div class="cover-btn-row">
       <button class="btn cover-btn" id="start-btn">Play</button>
       <button class="btn cover-btn ghost" id="open-index-nav">Strategy Manual</button>
@@ -2046,10 +2073,12 @@ function screenInstructions(){
 function hoverHintHTML(){
   return `<p class="muted" style="font-size:.74rem;margin-top:8px">💡 Hover over any card to reveal a real-world fact about the organism or function it's based on.</p>`;
 }
-function pageHint(text){
-  return `<div class="page-hint">🧭 ${esc(text)}</div>`;
+let hintOpen = false;
+let hintOpenScreen = null;
+function pageHint(text, extraStyle){
+  if(state.screen !== hintOpenScreen){ hintOpen = false; hintOpenScreen = state.screen; }
+  return `<div class="page-hint${hintOpen ? "" : " hidden"}"${extraStyle ? ` style="${extraStyle}"` : ""}>🧭 ${esc(text)}</div>`;
 }
-
 function screenSetup(){
   const gmHtml = state.starterGenmods.map((g,i)=>{
     const sel = state.selectedGenmod===i;
