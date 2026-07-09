@@ -2387,6 +2387,9 @@ function screenEnd(){
   return `
   <div class="brand"><h1>BIO<span>BATTLE</span></h1><small>RUN COMPLETE</small></div>
   <div class="panel">
+    <div class="panel-header-row" style="justify-content:flex-end; margin-bottom:6px">
+      <button class="info-btn" aria-label="Show help for this screen" title="Show help for this screen">i</button>
+    </div>
     <div class="result-banner ${win?"win":"lose"}">${bannerText}</div>
     ${pageHint("Tap Play Again to start a new run, Download Result Card to save an image of how this run went, or Menu to head back to the title screen.")}
     ${bodyText}
@@ -2395,7 +2398,6 @@ function screenEnd(){
       <button class="btn" id="again-btn">Play Again</button>
       <button class="btn ghost" id="share-result-btn">Download Result Card</button>
       <button class="btn" id="end-menu-btn">Menu</button>
-      <button class="info-btn" aria-label="Show help for this screen" title="Show help for this screen">i</button>
     </div>
   </div>
   <footer class="credit">Game Design and Development by Shivam Mohite<br>Creative Design by Aditi Rishiraj, Neethu Mariam, V. Sai Pallavi</footer>`;
