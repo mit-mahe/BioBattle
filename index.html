@@ -362,7 +362,7 @@ body{
 
 
   /* ---------- WildByte fight arena (left: threat / centre: reveal box / right: BioCore picks) ---------- */
-  .fight-arena{ display:flex; align-items:stretch; gap:0; margin-top:18px; }
+  .fight-arena{ display:flex; align-items:stretch; gap:20px; margin-top:18px; }
 
   .fight-arena-left{ flex:0 0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; }
 
@@ -373,14 +373,14 @@ body{
     color:var(--signal); opacity:.9; margin-bottom:8px; text-align:center;
   }
 
-  .fight-arena-divider{ position:relative; flex:0 0 34px; margin:0 4px; }
+  .fight-arena-divider{ position:relative; flex:0 0 34px; }
 
   .fight-arena-divider img{
     position:absolute; top:50%; left:50%; width:250px; height:auto;
     transform:translate(-50%,-50%) rotate(90deg); max-width:none; display:block;
   }
 
-  .fight-arena-center{ flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:150px; padding:0 4px; }
+  .fight-arena-center{ flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:150px; }
 
   .fight-center-box{
     width:100%; max-width:214px; aspect-ratio:190/272;
@@ -2033,10 +2033,12 @@ function fightArenaHTML(enemy){
       </div>`
     : "";
 
+  const enemyLabel = state.phase==="boss" ? "Project Hollowcross" : "WildByte";
+
   return `
   <div class="fight-arena">
     <div class="fight-arena-left">
-      <div class="fight-arena-col-label">WildByte</div>
+      <div class="fight-arena-col-label">${esc(enemyLabel)}</div>
       ${cardBlock(enemy, preview ? { atk: preview.enemyAtk, def: preview.enemyDef } : null)}
     </div>
     <div class="fight-arena-divider">${verticalDividerImgHTML()}</div>
