@@ -2387,10 +2387,7 @@ function screenEnd(){
   return `
   <div class="brand"><h1>BIO<span>BATTLE</span></h1><small>RUN COMPLETE</small></div>
   <div class="panel">
-    <div class="panel-header-row" style="justify-content:flex-end; margin-bottom:6px">
-      <button class="info-btn" aria-label="Show help for this screen" title="Show help for this screen">i</button>
-    </div>
-    <div class="result-banner ${f.win?"win":"lose"}">${bannerText}</div>
+    <div class="result-banner ${win?"win":"lose"}">${bannerText}</div>
     ${pageHint("Tap Play Again to start a new run, Download Result Card to save an image of how this run went, or Menu to head back to the title screen.")}
     ${bodyText}
     ${newAchHtml}
