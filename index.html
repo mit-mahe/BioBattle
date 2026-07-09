@@ -291,6 +291,14 @@ body{
 
   @keyframes pulse{ 0%,100%{ box-shadow:0 0 0 4px #FFD23F;} 50%{ box-shadow:0 0 0 4px transparent; } }
 
+  .bonus-genmod-section{ border-radius:12px; transition:box-shadow .2s ease; }
+  .bonus-genmod-section.flash-attention{ animation:flashAttention 1.2s ease; }
+  @keyframes flashAttention{
+    0%,100%{ box-shadow:0 0 0 0 rgba(255,210,63,0); }
+    20%,60%{ box-shadow:0 0 0 6px rgba(255,210,63,0.55); }
+    40%,80%{ box-shadow:0 0 0 0 rgba(255,210,63,0); }
+  }
+
 
   .genmod-list{ margin-top:8px; font-family:'IBM Plex Mono',monospace; font-size:.68rem; color:rgba(255,255,255,.85); }
 
@@ -1306,17 +1314,26 @@ function doFight(coreIdx){
 }
 
 function proceedAfterFight(){
-  if(state.lastFight.isBoss){
-    if(aliveRoster().length===0){ state.gameOverText="lose"; state.screen="end"; render(); return; }
-    if((state.bossDefeats||0)>=2){ state.gameOverText="win"; state.screen="end"; render(); return; }
-    enterBossRound();
-  } else {
-    state.round++;
-    if(aliveRoster().length===0){ state.gameOverText="lose"; state.screen="end"; render(); return; }
-    if(state.round>=state.wbQueue.length){ state.screen = "phase-transition"; }
-    else { state.screen = "pick"; }
+  try{
+    if(state.lastFight.isBoss){
+      if(aliveRoster().length===0){ state.gameOverText="lose"; state.screen="end"; render(); return; }
+      if((state.bossDefeats||0)>=2){ state.gameOverText="win"; state.screen="end"; render(); return; }
+      enterBossRound();
+    } else {
+      state.round++;
+      if(aliveRoster().length===0){ state.gameOverText="lose"; state.screen="end"; render(); return; }
+      if(state.round>=state.wbQueue.length){ state.screen = "phase-transition"; }
+      else { state.screen = "pick"; }
+    }
+    render();
+  }catch(err){
+    console.error("proceedAfterFight failed:", err);
+    if(aliveRoster().length===0){
+      state.gameOverText = state.gameOverText || "lose";
+      state.screen = "end";
+    }
+    render();
   }
-  render();
 }
 
 function beginBossPhase(){
@@ -1418,16 +1435,21 @@ function proceedToBoss(){ state.phase = "boss"; state.screen = "pick"; render();
 
 const app = document.getElementById("app");
 function render(){
-  app.innerHTML = renderScreen();
-  attachHandlers();
-  updateTopRightCredit();
-  waitForAppImages();
-  persistState();
   try{
-    if(location.hash.slice(1) !== state.screen){
-      history.replaceState(null, "", "#"+state.screen);
-    }
-  }catch(e){}
+    app.innerHTML = renderScreen();
+    attachHandlers();
+    updateTopRightCredit();
+    waitForAppImages();
+    persistState();
+    try{
+      if(location.hash.slice(1) !== state.screen){
+        history.replaceState(null, "", "#"+state.screen);
+      }
+    }catch(e){}
+  }catch(err){
+    console.error("render() failed:", err);
+    hideLoader();
+  }
 }
 
 function waitForAppImages(){
@@ -2203,9 +2225,11 @@ function screenFightResult(){
         </div>`;
       }).join("");
       bonusHtml = `
+        <div class="bonus-genmod-section">
         <h2 style="margin-top:20px;color:var(--signal)">Bonus GenMod Recovered — Assign it to a BioCore</h2>
         <div class="card-frame" style="max-width:190px;margin:12px auto 0">${genmodCardHTML(pendingGm, -1, false)}</div>
-        <div class="pick-list" style="margin-top:12px">${targets}</div>`;
+        <div class="pick-list" style="margin-top:12px">${targets}</div>
+        </div>`;
     }
 
     bodyHtml = `
@@ -2247,7 +2271,7 @@ function screenFightResult(){
     <div class="result-banner ${f.win?"win":"lose"}">${f.win ? "▲ Threat Neutralized" : "▼ Clash Failed"}</div>
     ${pageHint("Read what happened below, then tap Continue when you're ready to move on.")}
     ${bodyHtml}
-    <div class="btn-row"><button class="btn" id="continue-btn" ${pendingGm?"disabled":""}>Continue</button></div>
+   <div class="btn-row"><button class="btn" id="continue-btn">Continue</button></div>
   </div>`;
 }
 
@@ -2441,7 +2465,18 @@ function attachHandlers(){
   });
 
   const continueBtn = document.getElementById("continue-btn");
-  if(continueBtn) continueBtn.onclick = proceedAfterFight;
+  if(continueBtn) continueBtn.onclick = ()=>{
+    if(state.pendingBonusGenmod){
+      const section = document.querySelector(".bonus-genmod-section");
+      if(section){
+        section.scrollIntoView({behavior:"smooth", block:"center"});
+        section.classList.add("flash-attention");
+        setTimeout(()=>section.classList.remove("flash-attention"), 1200);
+      }
+      return;
+    }
+    proceedAfterFight();
+  };
 
   const proceedBoss = document.getElementById("proceed-boss");
   if(proceedBoss) proceedBoss.onclick = proceedToBoss;
