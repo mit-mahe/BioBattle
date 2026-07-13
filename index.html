@@ -687,6 +687,14 @@ function unlockAudio(){
   document.removeEventListener("keydown", unlockAudio);
   updateMenuAudio();
 }
+document.addEventListener("visibilitychange", ()=>{
+  if(!menuAudio) return;
+  if(document.hidden){
+    if(!menuAudio.paused) menuAudio.pause();
+  } else {
+    updateMenuAudio();
+  }
+});
 document.addEventListener("pointerdown", unlockAudio, {once:true});
 document.addEventListener("keydown", unlockAudio, {once:true});
 
