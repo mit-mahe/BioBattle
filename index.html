@@ -579,7 +579,7 @@ body{
 
   .index-row .iswatch-icon{ width:18px; height:18px; display:inline-block; color:var(--cream); }
 
-  .index-row .iswatch-icon svg{ width:100%; height:100%; }
+  .index-row .iswatch-icon img{ width:100%; height:100%; object-fit:contain; display:block; }
 
   .index-row .ientries{ font-size:.76rem; color:#c9c2ae; margin-top:6px; line-height:1.6; display:flex; flex-wrap:wrap; gap:6px; }
 
@@ -2340,7 +2340,7 @@ function screenFieldIndex(){
 
   const elRows = idx.elements.map(e=>`
     <div class="index-row">
-      <div class="irow-head"><span class="iswatch" style="background:${e.color}"></span>${esc(e.type)}</div>
+      <div class="irow-head"><span class="iswatch-icon"><img src="${MECH_ICON_IMG[m.type]}" alt="${esc(m.type)}" loading="lazy"></span>${esc(m.type)}</div>
       <div class="ientries"><span class="exposure-badge ${e.tone}">${esc(e.label)}</span></div>
     </div>
     <div class="index-tip">${esc(e.tip)}</div>`).join("");
