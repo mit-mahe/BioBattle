@@ -669,12 +669,36 @@ body{
 
 </head>
 <body>
+<audio id="menu-audio" src="audio/Elevator_Music.mp3" loop preload="auto"></audio>
 <div id="app-loader" class="app-loader">
   <img id="app-loader-icon" class="app-loader-icon" alt="Loading">
 </div>
 <div class="wrap" id="app"></div>
 <div class="top-right-credit" id="top-right-credit" style="display:none">Adapted from BioBattle - Manipal BioMachines</div>
 <script>
+const MENU_SCREENS = new Set(["title", "instructions", "field-index", "codex", "achievements"]);
+const menuAudio = document.getElementById("menu-audio");
+if(menuAudio) menuAudio.volume = 0.4;
+
+let audioUnlocked = false;
+function unlockAudio(){
+  audioUnlocked = true;
+  document.removeEventListener("pointerdown", unlockAudio);
+  document.removeEventListener("keydown", unlockAudio);
+  updateMenuAudio();
+}
+document.addEventListener("pointerdown", unlockAudio, {once:true});
+document.addEventListener("keydown", unlockAudio, {once:true});
+
+function updateMenuAudio(){
+  if(!menuAudio) return;
+  const shouldPlay = MENU_SCREENS.has(state.screen);
+  if(shouldPlay && audioUnlocked){
+    if(menuAudio.paused) menuAudio.play().catch(()=>{});
+  } else {
+    if(!menuAudio.paused) menuAudio.pause();
+  }
+}
 function showLoader(){
   const el = document.getElementById("app-loader");
   if(el) el.classList.remove("hidden");
@@ -1768,6 +1792,7 @@ function render(){
     updateTopRightCredit();
     waitForAppImages();
     persistState();
+    updateMenuAudio();   // <-- add this line
     try{
       if(location.hash.slice(1) !== state.screen){
         history.replaceState(null, "", "#"+state.screen);
