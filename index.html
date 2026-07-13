@@ -2340,14 +2340,14 @@ function screenFieldIndex(){
 
   const elRows = idx.elements.map(e=>`
     <div class="index-row">
-      <div class="irow-head"><span class="iswatch-icon"><img src="${MECH_ICON_IMG[m.type]}" alt="${esc(m.type)}" loading="lazy"></span>${esc(m.type)}</div>
+      <div class="irow-head"><span class="iswatch" style="background:${e.color}"></span>${esc(e.type)}</div>
       <div class="ientries"><span class="exposure-badge ${e.tone}">${esc(e.label)}</span></div>
     </div>
     <div class="index-tip">${esc(e.tip)}</div>`).join("");
 
   const mechRows = idx.mechanics.map(m=>`
     <div class="index-row">
-      <div class="irow-head"><span class="iswatch-icon">${mechIconSvg(m.type)}</span>${esc(m.type)}</div>
+      <div class="irow-head"><span class="iswatch-icon"><img src="${MECH_ICON_IMG[m.type]}" alt="${esc(m.type)}" loading="lazy"></span>${esc(m.type)}</div>
       <div class="ientries"><span class="exposure-badge ${m.tone}">${esc(m.label)}</span></div>
     </div>
     <div class="index-tip">${esc(m.tip)}</div>`).join("");
