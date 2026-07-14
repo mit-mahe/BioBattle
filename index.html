@@ -2783,7 +2783,7 @@ function screenSetup(){
       <h2>Assign your GenMods</h2>
       <div class="header-actions">
         <button class="info-btn" aria-label="Show help for this screen" title="Show help for this screen">i</button>
-        <button class="panel-back-btn" id="close-index">Back</button>
+        <button class="panel-back-btn" id="setup-back-btn">Back</button>
       </div>
     </div>
     ${pageHint("Tap a GenMod card below to pick it up, then tap a BioCore card to attach it. You can give both GenMods to one BioCore, or give one to each — either way is fine.")}
@@ -3153,6 +3153,9 @@ function attachHandlers(){
   });
   const closeIndex = document.getElementById("close-index");
   if(closeIndex) closeIndex.onclick = ()=>{ state.screen = state.previousScreen || "title"; render(); };
+
+  const setupBackBtn = document.getElementById("setup-back-btn");
+  if(setupBackBtn) setupBackBtn.onclick = ()=>{ state.screen = "title"; render(); };
 
   const openCodex = document.getElementById("open-codex");
   if(openCodex) openCodex.onclick = ()=>{ state.previousScreen = state.screen; state.screen = "codex"; render(); };
