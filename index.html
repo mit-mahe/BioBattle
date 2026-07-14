@@ -729,7 +729,7 @@ body{
 <div class="wrap" id="app"></div>
 <div class="top-right-credit" id="top-right-credit" style="display:none">Adapted from BioBattle - Manipal BioMachines</div>
 <script>
-const MENU_SCREENS = new Set(["title", "instructions", "field-index", "codex", "achievements", "settings"]);
+const MENU_SCREENS = new Set(["title", "instructions", "codex", "achievements", "settings"]);
 const menuAudio = document.getElementById("menu-audio");
 if(menuAudio) menuAudio.volume = 0.4;
 
@@ -754,13 +754,16 @@ document.addEventListener("keydown", unlockAudio, {once:true});
 function updateMenuAudio(){
   if(!menuAudio) return;
   const musicOn = !state.settings || state.settings.musicOn !== false;
-  const shouldPlay = MENU_SCREENS.has(state.screen) && musicOn;
+  const inMenuContext = MENU_SCREENS.has(state.screen) ||
+    (state.screen === "field-index" && MENU_SCREENS.has(state.previousScreen));
+  const shouldPlay = inMenuContext && musicOn;
   if(shouldPlay && audioUnlocked){
     if(menuAudio.paused) menuAudio.play().catch(()=>{});
   } else {
     if(!menuAudio.paused) menuAudio.pause();
   }
 }
+
 function showLoader(){
   const el = document.getElementById("app-loader");
   if(el) el.classList.remove("hidden");
@@ -1424,9 +1427,14 @@ function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const
 function draw(arr,n){ return shuffle(arr).slice(0,n).map(o=>({...o})); }
 /* ---------- save / restore across reloads ---------- */
 const SAVE_KEY = "biobattle_save_v1";
+const SETTINGS_KEY = "biobattle_settings_v1";
 
 function persistState(){
-  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+  try{ sessionStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+function persistSettings(){
+  try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings)); }catch(e){}
 }
 
 function rehydrateFx(list, master){
@@ -1438,7 +1446,11 @@ function rehydrateFx(list, master){
 
 function loadPersistedState(){
   try{
-    const raw = localStorage.getItem(SAVE_KEY);
+    const rawSettings = localStorage.getItem(SETTINGS_KEY);
+    if(rawSettings) state.settings = JSON.parse(rawSettings);
+  }catch(e){}
+  try{
+    const raw = sessionStorage.getItem(SAVE_KEY);
     if(!raw) return false;
     const saved = JSON.parse(raw);
     Object.assign(state, saved);
@@ -3156,19 +3168,19 @@ function attachHandlers(){
   const toggleReduceMotion = document.getElementById("toggle-reduce-motion");
   if(toggleReduceMotion) toggleReduceMotion.onclick = ()=>{
     state.settings.reduceMotion = !state.settings.reduceMotion;
-    applySettings(); persistState(); render();
+    applySettings(); persistSettings(); render();
   };
 
   const toggleSfx = document.getElementById("toggle-sfx");
   if(toggleSfx) toggleSfx.onclick = ()=>{
     state.settings.sfxOn = !state.settings.sfxOn;
-    applySettings(); persistState(); render();
+    applySettings(); persistSettings(); render();
   };
 
   const toggleMusic = document.getElementById("toggle-music");
   if(toggleMusic) toggleMusic.onclick = ()=>{
     state.settings.musicOn = !state.settings.musicOn;
-    applySettings(); updateMenuAudio(); persistState(); render();
+    applySettings(); persistSettings(); render();
   };
 
   const textScaleSlider = document.getElementById("text-scale-slider");
@@ -3178,14 +3190,14 @@ function attachHandlers(){
       applySettings();
       const val = document.getElementById("text-scale-val");
       if(val) val.textContent = Math.round(state.settings.textScale * 100) + "%";
-      persistState();
+      persistSettings(); render();
     };
   }
 
   app.querySelectorAll("[data-font-choice]").forEach(btn=>{
     btn.onclick = ()=>{
       state.settings.font = btn.getAttribute("data-font-choice");
-      applySettings(); persistState(); render();
+      applySettings(); persistSettings(); render();
     };
   });
   const backToTitle = document.getElementById("back-to-title");
