@@ -1844,6 +1844,7 @@ function startChaosDraw(){
 function checkGauntletDeadlock(){
   const hasPlayableCore = state.roster.some(b=>b.alive && !(b._round && b._round.disabled));
   if(!hasPlayableCore){
+    if(!state.quizOffered){ startHollowcrossQuiz(); return; }
     state.gameOverText = "lose-deadlock";
     state.screen = "end";
   } else {
