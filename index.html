@@ -1623,7 +1623,6 @@ function doFight(coreIdx){
     dmg = Math.max(0, self.atk-opp.def) || 1;
     core.baseDef -= dmg;
     if(currentStats(core).def<=0) core.alive=false;
-    if(isBoss && core.alive) core.lostLastBossRound = true;
   }
   state.lastFight = { enemyName:enemy.name, isBoss, win, coreName:core.name,
     coreAtk:opp.atk, coreDef:opp.def, enemyAtk:self.atk, enemyDef:self.def, dmg, coreIdx,
@@ -1821,9 +1820,7 @@ function startChaosDraw(){
   state.chaosCtx = {};
   state.roster.forEach(b=>{
     const cs=currentStats(b);
-    const disabledFromLoss = !!b.lostLastBossRound;
-    b._round={atk:cs.atk,def:cs.def,beforeAtk:cs.atk,beforeDef:cs.def,disabled:disabledFromLoss, disabledReason: disabledFromLoss ? "lost its last Hollowcross clash" : null};
-    b.lostLastBossRound = false;
+    b._round={atk:cs.atk,def:cs.def,beforeAtk:cs.atk,beforeDef:cs.def,disabled:false, disabledReason: null};
   });
   state.pendingHijack = state.chaosDrawn.some(c=>c.name==="Hijack");
   state.pendingSecondWind = null;
@@ -1844,7 +1841,6 @@ function startChaosDraw(){
 function checkGauntletDeadlock(){
   const hasPlayableCore = state.roster.some(b=>b.alive && !(b._round && b._round.disabled));
   if(!hasPlayableCore){
-    if(!state.quizOffered){ startHollowcrossQuiz(); return; }
     state.gameOverText = "lose-deadlock";
     state.screen = "end";
   } else {
