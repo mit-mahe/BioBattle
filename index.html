@@ -724,6 +724,7 @@ body{
 <body>
 <audio id="menu-audio" src="audio/Elevator_Music.mp3" loop preload="auto"></audio>
 <audio id="sfx-win" src="audio/winneris.mp3" preload="auto"></audio>
+<audio id="sfx-lose" src="audio/total_fail.mp3" preload="auto"></audio>
 <div id="app-loader" class="app-loader">
   <img id="app-loader-icon" class="app-loader-icon" alt="Loading">
 </div>
@@ -734,6 +735,7 @@ const MENU_SCREENS = new Set(["title", "instructions", "codex", "achievements", 
 const menuAudio = document.getElementById("menu-audio");
 if(menuAudio) menuAudio.volume = 0.4;
 const sfxWin = document.getElementById("sfx-win");
+const sfxLose = document.getElementById("sfx-lose");
 
 let audioUnlocked = false;
 function unlockAudio(){
@@ -1487,6 +1489,7 @@ function playSfx(audioEl){
 }
 
 let winSfxPlayed = false;
+let loseSfxPlayed = false;
 
 function newRun(){
   const cores = draw(BIOCORES,2).map(c=>({
@@ -1896,6 +1899,11 @@ function render(){
       if(!winSfxPlayed){ winSfxPlayed = true; playSfx(sfxWin); }
     } else {
       winSfxPlayed = false;
+    }
+    if(state.screen === "end" && state.gameOverText && state.gameOverText.indexOf("lose") === 0){
+      if(!loseSfxPlayed){ loseSfxPlayed = true; playSfx(sfxLose); }
+    } else {
+      loseSfxPlayed = false;
     }
     try{
       if(location.hash.slice(1) !== state.screen){
