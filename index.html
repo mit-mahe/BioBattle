@@ -723,6 +723,7 @@ body{
 </head>
 <body>
 <audio id="menu-audio" src="audio/Elevator_Music.mp3" loop preload="auto"></audio>
+<audio id="sfx-win" src="audio/winneris.mp3" preload="auto"></audio>
 <div id="app-loader" class="app-loader">
   <img id="app-loader-icon" class="app-loader-icon" alt="Loading">
 </div>
@@ -732,6 +733,7 @@ body{
 const MENU_SCREENS = new Set(["title", "instructions", "codex", "achievements", "settings"]);
 const menuAudio = document.getElementById("menu-audio");
 if(menuAudio) menuAudio.volume = 0.4;
+const sfxWin = document.getElementById("sfx-win");
 
 let audioUnlocked = false;
 function unlockAudio(){
@@ -1478,11 +1480,13 @@ function applySettings(){
   if(typeof menuAudio !== "undefined" && menuAudio) menuAudio.muted = !s.musicOn;
 }
 
-function playSfx(){
-  // Placeholder hook for future sound effects — respects the SFX on/off setting.
-  // Call playSfx() wherever you add real sound effect playback later.
+function playSfx(audioEl){
+  if(!audioEl) return;
   if(!state.settings || state.settings.sfxOn === false) return;
+  try{ audioEl.currentTime = 0; audioEl.play().catch(()=>{}); }catch(e){}
 }
+
+let winSfxPlayed = false;
 
 function newRun(){
   const cores = draw(BIOCORES,2).map(c=>({
@@ -1887,7 +1891,12 @@ function render(){
     updateTopRightCredit();
     waitForAppImages();
     persistState();
-    updateMenuAudio();   // <-- add this line
+    updateMenuAudio();
+    if(state.screen === "end" && state.gameOverText === "win"){
+      if(!winSfxPlayed){ winSfxPlayed = true; playSfx(sfxWin); }
+    } else {
+      winSfxPlayed = false;
+    }
     try{
       if(location.hash.slice(1) !== state.screen){
         history.replaceState(null, "", "#"+state.screen);
