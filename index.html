@@ -727,6 +727,7 @@ body{
 <audio id="hollowcross-audio" src="audio/Hollowcross.mp3" loop preload="auto"></audio>
 <audio id="sfx-win" src="audio/winneris.mp3" preload="auto"></audio>
 <audio id="sfx-lose" src="audio/total_fail.mp3" preload="auto"></audio>
+<audio id="sfx-alarm" src="audio/alarm.mp3" preload="auto"></audio>
 <div id="app-loader" class="app-loader">
   <img id="app-loader-icon" class="app-loader-icon" alt="Loading">
 </div>
@@ -744,6 +745,7 @@ const hollowcrossAudio = document.getElementById("hollowcross-audio");
 if(hollowcrossAudio) hollowcrossAudio.volume = 0.4;
 const sfxWin = document.getElementById("sfx-win");
 const sfxLose = document.getElementById("sfx-lose");
+const sfxAlarm = document.getElementById("sfx-alarm");
 
 let audioUnlocked = false;
 function unlockAudio(){
@@ -1563,6 +1565,7 @@ function playSfx(audioEl){
 let winSfxPlayed = false;
 const factTapTimes = {};
 let loseSfxPlayed = false;
+let alarmSfxPlayed = false;
 
 function newRun(){
   const cores = draw(BIOCORES,2).map(c=>({
@@ -1977,6 +1980,11 @@ function render(){
       if(!loseSfxPlayed){ loseSfxPlayed = true; playSfx(sfxLose); }
     } else {
       loseSfxPlayed = false;
+    }
+if(state.screen === "phase-transition"){
+      if(!alarmSfxPlayed){ alarmSfxPlayed = true; playSfx(sfxAlarm); }
+    } else {
+      alarmSfxPlayed = false;
     }
     try{
       if(location.hash.slice(1) !== state.screen){
