@@ -723,6 +723,7 @@ body{
 <body>
 <audio id="menu-audio" src="audio/Elevator_Music.mp3" loop preload="auto"></audio>
 <audio id="wildbyte-audio" src="audio/Wildbyte.mp3" loop preload="auto"></audio>
+<audio id="quiz-audio" src="audio/Quiz.mp3" loop preload="auto"></audio>
 <audio id="sfx-win" src="audio/winneris.mp3" preload="auto"></audio>
 <audio id="sfx-lose" src="audio/total_fail.mp3" preload="auto"></audio>
 <div id="app-loader" class="app-loader">
@@ -736,6 +737,8 @@ const menuAudio = document.getElementById("menu-audio");
 if(menuAudio) menuAudio.volume = 0.4;
 const wildbyteAudio = document.getElementById("wildbyte-audio");
 if(wildbyteAudio) wildbyteAudio.volume = 0.4;
+const quizAudio = document.getElementById("quiz-audio");
+if(quizAudio) quizAudio.volume = 0.4;
 const sfxWin = document.getElementById("sfx-win");
 const sfxLose = document.getElementById("sfx-lose");
 
@@ -746,14 +749,17 @@ function unlockAudio(){
   document.removeEventListener("keydown", unlockAudio);
   updateMenuAudio();
   updateWildbyteAudio();
+  updateQuizAudio();
 }
 document.addEventListener("visibilitychange", ()=>{
   if(document.hidden){
     if(menuAudio && !menuAudio.paused) menuAudio.pause();
     if(wildbyteAudio && !wildbyteAudio.paused) wildbyteAudio.pause();
+    if(quizAudio && !quizAudio.paused) quizAudio.pause();
   } else {
     updateMenuAudio();
     updateWildbyteAudio();
+    updateQuizAudio();
   }
 });
 document.addEventListener("pointerdown", unlockAudio, {once:true});
@@ -775,13 +781,23 @@ function updateMenuAudio(){
 function updateWildbyteAudio(){
   if(!wildbyteAudio) return;
   const musicOn = !state.settings || state.settings.musicOn !== false;
-  const inWildbyteRound = state.screen === "setup" ||
-    (state.phase === "wildbyte" && (state.screen === "pick" || state.screen === "fight-result"));
+  const inWildbyteRound = state.phase === "wildbyte" && (state.screen === "pick" || state.screen === "fight-result");
   const shouldPlay = inWildbyteRound && musicOn;
   if(shouldPlay && audioUnlocked){
     if(wildbyteAudio.paused) wildbyteAudio.play().catch(()=>{});
   } else {
     if(!wildbyteAudio.paused) wildbyteAudio.pause();
+  }
+}
+
+function updateQuizAudio(){
+  if(!quizAudio) return;
+  const musicOn = !state.settings || state.settings.musicOn !== false;
+  const shouldPlay = state.screen === "quiz" && musicOn;
+  if(shouldPlay && audioUnlocked){
+    if(quizAudio.paused) quizAudio.play().catch(()=>{});
+  } else {
+    if(!quizAudio.paused) quizAudio.pause();
   }
 }
 
@@ -1504,6 +1520,10 @@ function applySettings(){
     wildbyteAudio.muted = !s.musicOn;
     wildbyteAudio.volume = s.musicVolume;
   }
+  if(typeof quizAudio !== "undefined" && quizAudio){
+    quizAudio.muted = !s.musicOn;
+    quizAudio.volume = s.musicVolume;
+  }
 }
 
 function playSfx(audioEl){
@@ -1922,6 +1942,7 @@ function render(){
     persistState();
     updateMenuAudio();
     updateWildbyteAudio();
+    updateQuizAudio();
     if(state.screen === "end" && state.gameOverText === "win"){
       if(!winSfxPlayed){ winSfxPlayed = true; playSfx(sfxWin); }
     } else {
