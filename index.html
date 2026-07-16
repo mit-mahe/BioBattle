@@ -787,7 +787,8 @@ function updateMenuAudio(){
 function updateWildbyteAudio(){
   if(!wildbyteAudio) return;
   const musicOn = !state.settings || state.settings.musicOn !== false;
-  const inWildbyteRound = state.phase === "wildbyte" && (state.screen === "pick" || state.screen === "fight-result");
+  const inWildbyteRound = state.screen === "setup" ||
+    (state.phase === "wildbyte" && (state.screen === "pick" || state.screen === "fight-result"));
   const shouldPlay = inWildbyteRound && musicOn;
   if(shouldPlay && audioUnlocked){
     if(wildbyteAudio.paused) wildbyteAudio.play().catch(()=>{});
@@ -810,7 +811,8 @@ function updateQuizAudio(){
 function updateHollowcrossAudio(){
   if(!hollowcrossAudio) return;
   const musicOn = !state.settings || state.settings.musicOn !== false;
-  const inBossRound = state.phase === "boss" && (state.screen === "pick" || state.screen === "fight-result");
+  const inBossRound = (state.phase === "boss" && (state.screen === "pick" || state.screen === "fight-result")) ||
+    (state.phase === "chaos" && state.screen === "chaos-reveal");
   const shouldPlay = inBossRound && musicOn;
   if(shouldPlay && audioUnlocked){
     if(hollowcrossAudio.paused) hollowcrossAudio.play().catch(()=>{});
