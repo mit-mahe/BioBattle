@@ -722,6 +722,7 @@ body{
 </head>
 <body>
 <audio id="menu-audio" src="audio/Elevator_Music.mp3" loop preload="auto"></audio>
+<audio id="wildbyte-audio" src="audio/Wildbyte.mp3" loop preload="auto"></audio>
 <audio id="sfx-win" src="audio/winneris.mp3" preload="auto"></audio>
 <audio id="sfx-lose" src="audio/total_fail.mp3" preload="auto"></audio>
 <div id="app-loader" class="app-loader">
@@ -733,6 +734,8 @@ body{
 const MENU_SCREENS = new Set(["title", "instructions", "codex", "achievements", "settings"]);
 const menuAudio = document.getElementById("menu-audio");
 if(menuAudio) menuAudio.volume = 0.4;
+const wildbyteAudio = document.getElementById("wildbyte-audio");
+if(wildbyteAudio) wildbyteAudio.volume = 0.4;
 const sfxWin = document.getElementById("sfx-win");
 const sfxLose = document.getElementById("sfx-lose");
 
@@ -742,13 +745,15 @@ function unlockAudio(){
   document.removeEventListener("pointerdown", unlockAudio);
   document.removeEventListener("keydown", unlockAudio);
   updateMenuAudio();
+  updateWildbyteAudio();
 }
 document.addEventListener("visibilitychange", ()=>{
-  if(!menuAudio) return;
   if(document.hidden){
-    if(!menuAudio.paused) menuAudio.pause();
+    if(menuAudio && !menuAudio.paused) menuAudio.pause();
+    if(wildbyteAudio && !wildbyteAudio.paused) wildbyteAudio.pause();
   } else {
     updateMenuAudio();
+    updateWildbyteAudio();
   }
 });
 document.addEventListener("pointerdown", unlockAudio, {once:true});
@@ -764,6 +769,18 @@ function updateMenuAudio(){
     if(menuAudio.paused) menuAudio.play().catch(()=>{});
   } else {
     if(!menuAudio.paused) menuAudio.pause();
+  }
+}
+
+function updateWildbyteAudio(){
+  if(!wildbyteAudio) return;
+  const musicOn = !state.settings || state.settings.musicOn !== false;
+  const inWildbyteRound = state.phase === "wildbyte" && (state.screen === "pick" || state.screen === "fight-result");
+  const shouldPlay = inWildbyteRound && musicOn;
+  if(shouldPlay && audioUnlocked){
+    if(wildbyteAudio.paused) wildbyteAudio.play().catch(()=>{});
+  } else {
+    if(!wildbyteAudio.paused) wildbyteAudio.pause();
   }
 }
 
@@ -1482,6 +1499,10 @@ function applySettings(){
     menuAudio.muted = !s.musicOn;
     menuAudio.volume = s.musicVolume;
   }
+  if(typeof wildbyteAudio !== "undefined" && wildbyteAudio){
+    wildbyteAudio.muted = !s.musicOn;
+    wildbyteAudio.volume = s.musicVolume;
+  }
 }
 
 function playSfx(audioEl){
@@ -1899,6 +1920,7 @@ function render(){
     waitForAppImages();
     persistState();
     updateMenuAudio();
+    updateWildbyteAudio();
     if(state.screen === "end" && state.gameOverText === "win"){
       if(!winSfxPlayed){ winSfxPlayed = true; playSfx(sfxWin); }
     } else {
