@@ -727,7 +727,7 @@ body{
 <audio id="hollowcross-audio" src="audio/Hollowcross.mp3" loop preload="auto"></audio>
 <audio id="sfx-win" src="audio/winneris.mp3" preload="auto"></audio>
 <audio id="sfx-lose" src="audio/total_fail.mp3" preload="auto"></audio>
-<audio id="sfx-alarm" src="audio/alarm.mp3" preload="auto"></audio>
+<audio id="sfx-alarm" src="audio/alarm.mp3" loop preload="auto"></audio>
 <div id="app-loader" class="app-loader">
   <img id="app-loader-icon" class="app-loader-icon" alt="Loading">
 </div>
@@ -756,6 +756,7 @@ function unlockAudio(){
   updateWildbyteAudio();
   updateQuizAudio();
   updateHollowcrossAudio();
+  updateAlarmAudio();
 }
 document.addEventListener("visibilitychange", ()=>{
   if(document.hidden){
@@ -763,11 +764,13 @@ document.addEventListener("visibilitychange", ()=>{
     if(wildbyteAudio && !wildbyteAudio.paused) wildbyteAudio.pause();
     if(quizAudio && !quizAudio.paused) quizAudio.pause();
     if(hollowcrossAudio && !hollowcrossAudio.paused) hollowcrossAudio.pause();
+    if(sfxAlarm && !sfxAlarm.paused) sfxAlarm.pause();
   } else {
     updateMenuAudio();
     updateWildbyteAudio();
     updateQuizAudio();
     updateHollowcrossAudio();
+    updateAlarmAudio();
   }
 });
 document.addEventListener("pointerdown", unlockAudio, {once:true});
@@ -813,13 +816,24 @@ function updateQuizAudio(){
 function updateHollowcrossAudio(){
   if(!hollowcrossAudio) return;
   const musicOn = !state.settings || state.settings.musicOn !== false;
-  const inBossRound = (state.phase === "boss" && (state.screen === "pick" || state.screen === "fight-result")) ||
-    (state.phase === "chaos" && state.screen === "chaos-reveal");
+  const inBossRound = state.phase === "boss" && (state.screen === "pick" || state.screen === "fight-result");
   const shouldPlay = inBossRound && musicOn;
   if(shouldPlay && audioUnlocked){
     if(hollowcrossAudio.paused) hollowcrossAudio.play().catch(()=>{});
   } else {
     if(!hollowcrossAudio.paused) hollowcrossAudio.pause();
+  }
+}
+
+function updateAlarmAudio(){
+  if(!sfxAlarm) return;
+  const sfxOn = !state.settings || state.settings.sfxOn !== false;
+  const shouldPlay = state.screen === "phase-transition" && sfxOn;
+  if(shouldPlay && audioUnlocked){
+    sfxAlarm.volume = (state.settings && state.settings.sfxVolume != null) ? state.settings.sfxVolume : 0.8;
+    if(sfxAlarm.paused) sfxAlarm.play().catch(()=>{});
+  } else {
+    if(!sfxAlarm.paused) sfxAlarm.pause();
   }
 }
 
@@ -1565,7 +1579,7 @@ function playSfx(audioEl){
 let winSfxPlayed = false;
 const factTapTimes = {};
 let loseSfxPlayed = false;
-let alarmSfxPlayed = false;
+
 
 function newRun(){
   const cores = draw(BIOCORES,2).map(c=>({
@@ -1981,11 +1995,7 @@ function render(){
     } else {
       loseSfxPlayed = false;
     }
-if(state.screen === "phase-transition"){
-      if(!alarmSfxPlayed){ alarmSfxPlayed = true; playSfx(sfxAlarm); }
-    } else {
-      alarmSfxPlayed = false;
-    }
+    updateAlarmAudio();
     try{
       if(location.hash.slice(1) !== state.screen){
         history.replaceState(null, "", "#"+state.screen);
