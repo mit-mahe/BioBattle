@@ -776,14 +776,34 @@ document.addEventListener("visibilitychange", ()=>{
 document.addEventListener("pointerdown", unlockAudio, {once:true});
 document.addEventListener("keydown", unlockAudio, {once:true});
 
+function fadeInAudio(audioEl, targetVolume, duration){
+  if(!audioEl) return;
+  duration = duration || 900;
+  const steps = 18;
+  const stepTime = duration / steps;
+  let step = 0;
+  audioEl.volume = 0;
+  if(audioEl._fadeTimer) clearInterval(audioEl._fadeTimer);
+  audioEl._fadeTimer = setInterval(()=>{
+    step++;
+    audioEl.volume = Math.min(targetVolume, (targetVolume * step) / steps);
+    if(step >= steps){
+      clearInterval(audioEl._fadeTimer);
+      audioEl._fadeTimer = null;
+      audioEl.volume = targetVolume;
+    }
+  }, stepTime);
+}
+
 function updateMenuAudio(){
   if(!menuAudio) return;
   const musicOn = !state.settings || state.settings.musicOn !== false;
+  const vol = (state.settings && state.settings.musicVolume != null) ? state.settings.musicVolume : 0.4;
   const inMenuContext = MENU_SCREENS.has(state.screen) ||
     (state.screen === "field-index" && MENU_SCREENS.has(state.previousScreen));
   const shouldPlay = inMenuContext && musicOn;
   if(shouldPlay && audioUnlocked){
-    if(menuAudio.paused) menuAudio.play().catch(()=>{});
+    if(menuAudio.paused){ fadeInAudio(menuAudio, vol); menuAudio.play().catch(()=>{}); }
   } else {
     if(!menuAudio.paused) menuAudio.pause();
   }
@@ -792,11 +812,12 @@ function updateMenuAudio(){
 function updateWildbyteAudio(){
   if(!wildbyteAudio) return;
   const musicOn = !state.settings || state.settings.musicOn !== false;
+  const vol = (state.settings && state.settings.musicVolume != null) ? state.settings.musicVolume : 0.4;
   const inWildbyteRound = state.screen === "setup" ||
     (state.phase === "wildbyte" && (state.screen === "pick" || state.screen === "fight-result"));
   const shouldPlay = inWildbyteRound && musicOn;
   if(shouldPlay && audioUnlocked){
-    if(wildbyteAudio.paused) wildbyteAudio.play().catch(()=>{});
+    if(wildbyteAudio.paused){ fadeInAudio(wildbyteAudio, vol); wildbyteAudio.play().catch(()=>{}); }
   } else {
     if(!wildbyteAudio.paused) wildbyteAudio.pause();
   }
@@ -805,9 +826,10 @@ function updateWildbyteAudio(){
 function updateQuizAudio(){
   if(!quizAudio) return;
   const musicOn = !state.settings || state.settings.musicOn !== false;
+  const vol = (state.settings && state.settings.musicVolume != null) ? state.settings.musicVolume : 0.4;
   const shouldPlay = state.screen === "quiz" && musicOn;
   if(shouldPlay && audioUnlocked){
-    if(quizAudio.paused) quizAudio.play().catch(()=>{});
+    if(quizAudio.paused){ fadeInAudio(quizAudio, vol); quizAudio.play().catch(()=>{}); }
   } else {
     if(!quizAudio.paused) quizAudio.pause();
   }
@@ -816,7 +838,8 @@ function updateQuizAudio(){
 function updateHollowcrossAudio(){
   if(!hollowcrossAudio) return;
   const musicOn = !state.settings || state.settings.musicOn !== false;
-  const inBossRound = state.phase === "boss" && (state.screen === "pick" || state.screen === "fight-result");
+  const inBossRound = (state.phase === "boss" && (state.screen === "pick" || state.screen === "fight-result")) ||
+    (state.phase === "chaos" && state.screen === "chaos-reveal");
   const shouldPlay = inBossRound && musicOn;
   if(shouldPlay && audioUnlocked){
     if(hollowcrossAudio.paused) hollowcrossAudio.play().catch(()=>{});
@@ -825,15 +848,25 @@ function updateHollowcrossAudio(){
   }
 }
 
+let alarmStartScheduled = false;
 function updateAlarmAudio(){
   if(!sfxAlarm) return;
   const sfxOn = !state.settings || state.settings.sfxOn !== false;
   const shouldPlay = state.screen === "phase-transition" && sfxOn;
   if(shouldPlay && audioUnlocked){
     sfxAlarm.volume = (state.settings && state.settings.sfxVolume != null) ? state.settings.sfxVolume : 0.8;
-    if(sfxAlarm.paused) sfxAlarm.play().catch(()=>{});
+    if(sfxAlarm.paused && !alarmStartScheduled){
+      alarmStartScheduled = true;
+      setTimeout(()=>{
+        alarmStartScheduled = false;
+        if(state.screen === "phase-transition" && sfxAlarm.paused){
+          sfxAlarm.play().catch(()=>{});
+        }
+      }, 500);
+    }
   } else {
     if(!sfxAlarm.paused) sfxAlarm.pause();
+    alarmStartScheduled = false;
   }
 }
 
@@ -1986,12 +2019,12 @@ function render(){
     updateQuizAudio();
     updateHollowcrossAudio();
     if(state.screen === "end" && state.gameOverText === "win"){
-      if(!winSfxPlayed){ winSfxPlayed = true; playSfx(sfxWin); }
+      if(!winSfxPlayed){ winSfxPlayed = true; setTimeout(()=>playSfx(sfxWin), 500); }
     } else {
       winSfxPlayed = false;
     }
     if(state.screen === "end" && state.gameOverText && state.gameOverText.indexOf("lose") === 0){
-      if(!loseSfxPlayed){ loseSfxPlayed = true; playSfx(sfxLose); }
+      if(!loseSfxPlayed){ loseSfxPlayed = true; setTimeout(()=>playSfx(sfxLose), 500); }
     } else {
       loseSfxPlayed = false;
     }
@@ -2646,7 +2679,7 @@ function screenCodex(){
     const f = ORGANISM_FACTS[k];
     return `<div class="codex-entry${seen?"":" locked"}">
       <div class="codex-name">${seen ? esc(name) : "???"}</div>
-      <div class="codex-fact">${seen ? esc(f.fact) : "Hover (or press-and-hold on mobile) over a card featuring this specimen to unlock its field note."}</div>
+      <div class="codex-fact">${seen ? esc(f.fact) : "Double-tap a card featuring this specimen to unlock its field note."}</div>
       ${seen ? `<div class="codex-src">Source: ${esc(f.source)}</div>` : ""}
     </div>`;
   }).join("");
@@ -2662,7 +2695,7 @@ function screenCodex(){
       </div>
     </div>
     ${pageHint("This fills in automatically as you discover fun facts during setup and battle — no action needed on this page itself.")}
-    <p class="muted">${found} / ${total} Field Notes discovered. Keep hovering (or press-and-holding on mobile) over cards during setup and battle to fill in the rest.</p>
+    <p class="muted">${found} / ${total} Field Notes discovered. Keep double-tapping cards during setup and battle to fill in the rest.</p>
     <div class="codex-grid">${entries}</div>
   </div>`;
 }
