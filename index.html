@@ -366,7 +366,7 @@ body{
 
 
   /* ---------- card hover tooltip (field-fact reveal after 2s hover) ---------- */
-  .card-frame{ position:relative; max-width:190px; margin:0 auto; }
+  .card-frame{ position:relative; max-width:190px; margin:0 auto; user-select:none; -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; }
 
   .card-frame .card{ max-width:100%; }
 
@@ -440,7 +440,6 @@ body{
     background:rgba(238,230,211,0.07); border:1px solid rgba(238,230,211,0.18); border-radius:16px;
     display:flex; align-items:center; justify-content:center; backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
     transition:background .2s ease, border-color .2s ease, box-shadow .2s ease; padding:12px; box-sizing:border-box;
-    overflow:hidden;
   }
 
   .fight-center-box.filled{ background:rgba(238,230,211,0.03); border-color:var(--signal-dim); box-shadow:0 0 0 1px rgba(208,244,234,0.08) inset; }
@@ -1496,6 +1495,7 @@ function playSfx(audioEl){
 }
 
 let winSfxPlayed = false;
+const factTapTimes = {};
 let loseSfxPlayed = false;
 
 function newRun(){
@@ -3232,6 +3232,7 @@ function attachHandlers(){
     };
   }
 
+  let sfxPreviewLastPlay = 0;
   const sfxVolumeSlider = document.getElementById("sfx-volume-slider");
   if(sfxVolumeSlider){
     sfxVolumeSlider.oninput = ()=>{
@@ -3240,6 +3241,11 @@ function attachHandlers(){
       const val = document.getElementById("sfx-volume-val");
       if(val) val.textContent = Math.round(state.settings.sfxVolume * 100) + "%";
       persistSettings();
+      const now = Date.now();
+      if(now - sfxPreviewLastPlay > 250){
+        sfxPreviewLastPlay = now;
+        playSfx(sfxWin);
+      }
     };
   }
 
@@ -3290,12 +3296,17 @@ function revealTip(){
 positionFactTip();
       markFactSeen(type, name, base);
     }
-    let lastTapTime = 0;
-    frame.addEventListener("click", ()=>{
+    const tapKey = type + "::" + name + "::" + (base||"");
+    frame.addEventListener("click", (e)=>{
       const now = Date.now();
-      const isDoubleTap = (now - lastTapTime) < 400;
-      lastTapTime = isDoubleTap ? 0 : now;
-      if(!isDoubleTap) return;
+      const last = factTapTimes[tapKey] || 0;
+      const isDoubleTap = (now - last) < 400;
+      if(!isDoubleTap){
+        factTapTimes[tapKey] = now;
+        return;
+      }
+      e.stopPropagation();
+      factTapTimes[tapKey] = 0;
       if(openFactTip && openFactTip !== tip){ openFactTip.classList.remove("show"); }
       if(tip.classList.contains("show")){
         tip.classList.remove("show");
@@ -3304,7 +3315,7 @@ positionFactTip();
         revealTip();
         openFactTip = tip;
       }
-    });
+    }, true);
   });
 }
 
