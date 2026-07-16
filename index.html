@@ -724,6 +724,7 @@ body{
 <audio id="menu-audio" src="audio/Elevator_Music.mp3" loop preload="auto"></audio>
 <audio id="wildbyte-audio" src="audio/Wildbyte.mp3" loop preload="auto"></audio>
 <audio id="quiz-audio" src="audio/Quiz.mp3" loop preload="auto"></audio>
+<audio id="hollowcross-audio" src="audio/Hollowcross.mp3" loop preload="auto"></audio>
 <audio id="sfx-win" src="audio/winneris.mp3" preload="auto"></audio>
 <audio id="sfx-lose" src="audio/total_fail.mp3" preload="auto"></audio>
 <div id="app-loader" class="app-loader">
@@ -739,6 +740,8 @@ const wildbyteAudio = document.getElementById("wildbyte-audio");
 if(wildbyteAudio) wildbyteAudio.volume = 0.4;
 const quizAudio = document.getElementById("quiz-audio");
 if(quizAudio) quizAudio.volume = 0.4;
+const hollowcrossAudio = document.getElementById("hollowcross-audio");
+if(hollowcrossAudio) hollowcrossAudio.volume = 0.4;
 const sfxWin = document.getElementById("sfx-win");
 const sfxLose = document.getElementById("sfx-lose");
 
@@ -750,16 +753,19 @@ function unlockAudio(){
   updateMenuAudio();
   updateWildbyteAudio();
   updateQuizAudio();
+  updateHollowcrossAudio();
 }
 document.addEventListener("visibilitychange", ()=>{
   if(document.hidden){
     if(menuAudio && !menuAudio.paused) menuAudio.pause();
     if(wildbyteAudio && !wildbyteAudio.paused) wildbyteAudio.pause();
     if(quizAudio && !quizAudio.paused) quizAudio.pause();
+    if(hollowcrossAudio && !hollowcrossAudio.paused) hollowcrossAudio.pause();
   } else {
     updateMenuAudio();
     updateWildbyteAudio();
     updateQuizAudio();
+    updateHollowcrossAudio();
   }
 });
 document.addEventListener("pointerdown", unlockAudio, {once:true});
@@ -798,6 +804,18 @@ function updateQuizAudio(){
     if(quizAudio.paused) quizAudio.play().catch(()=>{});
   } else {
     if(!quizAudio.paused) quizAudio.pause();
+  }
+}
+
+function updateHollowcrossAudio(){
+  if(!hollowcrossAudio) return;
+  const musicOn = !state.settings || state.settings.musicOn !== false;
+  const inBossRound = state.phase === "boss" && (state.screen === "pick" || state.screen === "fight-result");
+  const shouldPlay = inBossRound && musicOn;
+  if(shouldPlay && audioUnlocked){
+    if(hollowcrossAudio.paused) hollowcrossAudio.play().catch(()=>{});
+  } else {
+    if(!hollowcrossAudio.paused) hollowcrossAudio.pause();
   }
 }
 
@@ -1524,6 +1542,10 @@ function applySettings(){
     quizAudio.muted = !s.musicOn;
     quizAudio.volume = s.musicVolume;
   }
+  if(typeof hollowcrossAudio !== "undefined" && hollowcrossAudio){
+    hollowcrossAudio.muted = !s.musicOn;
+    hollowcrossAudio.volume = s.musicVolume;
+  }
 }
 
 function playSfx(audioEl){
@@ -1943,6 +1965,7 @@ function render(){
     updateMenuAudio();
     updateWildbyteAudio();
     updateQuizAudio();
+    updateHollowcrossAudio();
     if(state.screen === "end" && state.gameOverText === "win"){
       if(!winSfxPlayed){ winSfxPlayed = true; playSfx(sfxWin); }
     } else {
