@@ -1424,7 +1424,7 @@ const state = {
   round:0, bossRound:0, phase:"setup", chaosDrawn:[], lastFight:null, gameOverText:null,
   selectedGenmod:null, previousScreen:"title", selectedFightIdx:null,
   quizOffered:false, quiz:null, quizResult:null, quizRevivalUsed:false,
-  settings:{ reduceMotion:false, sfxOn:true, musicOn:true, textScale:1, font:"default" },
+  settings:{ reduceMotion:false, sfxOn:true, musicOn:true, sfxVolume:0.8, musicVolume:0.4, textScale:1, font:"default" },
 };
 
 function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
@@ -1470,7 +1470,7 @@ function loadPersistedState(){
 
 function applySettings(){
   state.settings = Object.assign(
-    { reduceMotion:false, sfxOn:true, musicOn:true, textScale:1, font:"default" },
+    { reduceMotion:false, sfxOn:true, musicOn:true, sfxVolume:0.8, musicVolume:0.4, textScale:1, font:"default" },
     state.settings || {}
   );
   const s = state.settings;
@@ -1479,13 +1479,20 @@ function applySettings(){
   document.body.classList.remove("font-atkinson", "font-opendyslexic");
   if(s.font === "atkinson") document.body.classList.add("font-atkinson");
   else if(s.font === "opendyslexic") document.body.classList.add("font-opendyslexic");
-  if(typeof menuAudio !== "undefined" && menuAudio) menuAudio.muted = !s.musicOn;
+  if(typeof menuAudio !== "undefined" && menuAudio){
+    menuAudio.muted = !s.musicOn;
+    menuAudio.volume = s.musicVolume;
+  }
 }
 
 function playSfx(audioEl){
   if(!audioEl) return;
   if(!state.settings || state.settings.sfxOn === false) return;
-  try{ audioEl.currentTime = 0; audioEl.play().catch(()=>{}); }catch(e){}
+  try{
+    audioEl.currentTime = 0;
+    audioEl.volume = (state.settings.sfxVolume != null) ? state.settings.sfxVolume : 0.8;
+    audioEl.play().catch(()=>{});
+  }catch(e){}
 }
 
 let winSfxPlayed = false;
@@ -2731,6 +2738,13 @@ function screenSettings(){
         <button class="settings-toggle ${s.sfxOn ? "on" : ""}" id="toggle-sfx">${s.sfxOn ? "ON" : "OFF"}</button>
       </div>
       <p class="settings-desc">Turns in-game sound effects on or off.</p>
+      <div class="settings-label-row">
+        <label>SFX Volume</label>
+        <span class="settings-slider-val" id="sfx-volume-val">${Math.round((s.sfxVolume != null ? s.sfxVolume : 0.8) * 100)}%</span>
+      </div>
+      <div class="settings-slider-row">
+        <input type="range" id="sfx-volume-slider" min="0" max="1" step="0.01" value="${s.sfxVolume != null ? s.sfxVolume : 0.8}">
+      </div>
     </div>
 
     <div class="settings-section">
@@ -2739,6 +2753,13 @@ function screenSettings(){
         <button class="settings-toggle ${s.musicOn ? "on" : ""}" id="toggle-music">${s.musicOn ? "ON" : "OFF"}</button>
       </div>
       <p class="settings-desc">Turns the background music on or off.</p>
+      <div class="settings-label-row">
+        <label>Music Volume</label>
+        <span class="settings-slider-val" id="music-volume-val">${Math.round((s.musicVolume != null ? s.musicVolume : 0.4) * 100)}%</span>
+      </div>
+      <div class="settings-slider-row">
+        <input type="range" id="music-volume-slider" min="0" max="1" step="0.01" value="${s.musicVolume != null ? s.musicVolume : 0.4}">
+      </div>
     </div>
 
     <div class="settings-section">
@@ -2768,7 +2789,7 @@ function screenSettings(){
 }
 
 function hoverHintHTML(){
-  return `<p class="muted" style="font-size:.74rem;margin-top:8px">💡 Hover over any card to reveal a real-world fact about the organism or function it's based on.</p>`;
+  return `<p class="muted" style="font-size:.74rem;margin-top:8px">💡 Double-tap any card to reveal a real-world fact about the organism or function it's based on.</p>`;
 }
 let hintOpen = false;
 let hintOpenScreen = null;
@@ -3211,6 +3232,28 @@ function attachHandlers(){
     };
   }
 
+  const sfxVolumeSlider = document.getElementById("sfx-volume-slider");
+  if(sfxVolumeSlider){
+    sfxVolumeSlider.oninput = ()=>{
+      state.settings.sfxVolume = parseFloat(sfxVolumeSlider.value);
+      applySettings();
+      const val = document.getElementById("sfx-volume-val");
+      if(val) val.textContent = Math.round(state.settings.sfxVolume * 100) + "%";
+      persistSettings();
+    };
+  }
+
+  const musicVolumeSlider = document.getElementById("music-volume-slider");
+  if(musicVolumeSlider){
+    musicVolumeSlider.oninput = ()=>{
+      state.settings.musicVolume = parseFloat(musicVolumeSlider.value);
+      applySettings();
+      const val = document.getElementById("music-volume-val");
+      if(val) val.textContent = Math.round(state.settings.musicVolume * 100) + "%";
+      persistSettings();
+    };
+  }
+
   app.querySelectorAll("[data-font-choice]").forEach(btn=>{
     btn.onclick = ()=>{
       state.settings.font = btn.getAttribute("data-font-choice");
@@ -3220,14 +3263,13 @@ function attachHandlers(){
   const backToTitle = document.getElementById("back-to-title");
   if(backToTitle) backToTitle.onclick = ()=>{ state.screen = "title"; render(); };
 
+  let openFactTip = null;
   app.querySelectorAll(".card-frame").forEach(frame=>{
     const tip = frame.querySelector(".fact-tip");
     if(!tip) return;
     const type = frame.getAttribute("data-fact-type");
     const name = frame.getAttribute("data-fact-name");
     const base = frame.getAttribute("data-fact-base");
-    let hoverTimer = null;
-    let touchRevealed = false;
 function positionFactTip(){
   tip.style.transform = "translateX(-50%) translateY(0)";
   const margin = 12;
@@ -3248,33 +3290,21 @@ function revealTip(){
 positionFactTip();
       markFactSeen(type, name, base);
     }
-    frame.addEventListener("mouseenter", ()=>{
-     hoverTimer = setTimeout(revealTip, 500);
-    });
-    frame.addEventListener("mouseleave", ()=>{
-      clearTimeout(hoverTimer);
-      tip.classList.remove("show");
-    });
-    // Touch equivalent: press and hold (~500ms) reveals the fact tip without
-    // triggering the card's normal tap action (select/assign). A quick tap
-    // still passes through as a normal click.
-    frame.addEventListener("touchstart", ()=>{
-      touchRevealed = false;
-      hoverTimer = setTimeout(()=>{
+    let lastTapTime = 0;
+    frame.addEventListener("click", ()=>{
+      const now = Date.now();
+      const isDoubleTap = (now - lastTapTime) < 400;
+      lastTapTime = isDoubleTap ? 0 : now;
+      if(!isDoubleTap) return;
+      if(openFactTip && openFactTip !== tip){ openFactTip.classList.remove("show"); }
+      if(tip.classList.contains("show")){
+        tip.classList.remove("show");
+        openFactTip = null;
+      } else {
         revealTip();
-        touchRevealed = true;
-      }, 500);
-    }, {passive:true});
-    frame.addEventListener("touchend", (e)=>{
-      clearTimeout(hoverTimer);
-      if(touchRevealed){
-        e.preventDefault();
-        setTimeout(()=>{ tip.classList.remove("show"); touchRevealed=false; }, 1800);
+        openFactTip = tip;
       }
     });
-    frame.addEventListener("touchmove", ()=>{
-      clearTimeout(hoverTimer);
-    }, {passive:true});
   });
 }
 
