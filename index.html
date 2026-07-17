@@ -3479,15 +3479,15 @@ function attachHandlers(){
   };
 
   const textScaleSlider = document.getElementById("text-scale-slider");
-  if(textScaleSlider){
-    textScaleSlider.oninput = ()=>{
-      state.settings.textScale = parseFloat(textScaleSlider.value);
-      applySettings();
-      const val = document.getElementById("text-scale-val");
-      if(val) val.textContent = Math.round(state.settings.textScale * 100) + "%";
-      persistSettings(); render();
-    };
-  }
+if(textScaleSlider){
+  textScaleSlider.oninput = ()=>{
+    state.settings.textScale = parseFloat(textScaleSlider.value);
+    applySettings();
+    const val = document.getElementById("text-scale-val");
+    if(val) val.textContent = Math.round(state.settings.textScale * 100) + "%";
+    persistSettings();
+  };
+}
 
   let sfxPreviewLastPlay = 0;
   const sfxVolumeSlider = document.getElementById("sfx-volume-slider");
