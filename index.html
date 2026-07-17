@@ -838,11 +838,12 @@ function updateQuizAudio(){
 function updateHollowcrossAudio(){
   if(!hollowcrossAudio) return;
   const musicOn = !state.settings || state.settings.musicOn !== false;
+  const vol = (state.settings && state.settings.musicVolume != null) ? state.settings.musicVolume : 0.4;
   const inBossRound = (state.phase === "boss" && (state.screen === "pick" || state.screen === "fight-result")) ||
     (state.phase === "chaos" && state.screen === "chaos-reveal");
   const shouldPlay = inBossRound && musicOn;
   if(shouldPlay && audioUnlocked){
-    if(hollowcrossAudio.paused) hollowcrossAudio.play().catch(()=>{});
+    if(hollowcrossAudio.paused){ fadeInAudio(hollowcrossAudio, vol); hollowcrossAudio.play().catch(()=>{}); }
   } else {
     if(!hollowcrossAudio.paused) hollowcrossAudio.pause();
   }
