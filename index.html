@@ -2757,7 +2757,7 @@ const rosterHtml = (rosterReport.length && state.previousScreen !== "title") ? `
       </div>
     </div>
     ${pageHint("This page is just for reading — nothing here changes your game. Come back anytime you want a refresher.")}
-    <p class="muted">BioBattle has no rock-paper-scissors element wheel — instead, individual WildByte and Project Hollowcross cards call out specific Elements or Mechanic types in their Overdrive Effects. This report doesn't reveal which exact cards do what (that's still yours to discover), but it does score how hard the deck as a whole leans on each type, so you know where to reinforce before you commit a BioCore.</p>
+    <p class="muted">In BioBattle, each WildByte and Project Hollowcross card calls out specific Elements or Mechanic types in their Overdrive Effects. This report doesn't reveal which exact cards do what (that's still yours to discover), but it does score how hard the deck as a whole leans on each type, so you know where to reinforce before you commit a BioCore.</p>
     ${rosterHtml}
     <h2 style="margin-top:18px">By Element</h2>
     <div class="index-table">${elRows}</div>
@@ -2852,7 +2852,7 @@ function screenTitle(){
       <button class="btn cover-btn ghost" id="open-settings">Settings</button>
     </div>
   </div>
-  <footer class="credit">Game Design and Development by Shivam Mohite<br>Creative Design by Aditi Rishiraj, Neethu Mariam, V. Sai Pallavi</footer>`;
+  <footer class="credit">Game Design and Development by Shivam Mohite<br>Creative Design by Aditi Rishiraj, Neethu Mariam, V. Sai Pallavi<br>Music and SFX are licensed under Creative Commons Zero (CC0)</footer>`;
 }
 
 function screenInstructions(){
@@ -2966,15 +2966,15 @@ function screenSettings(){
         <label>Low Stimulation Mode</label>
         <button class="settings-toggle ${s.lowStimulation ? "on" : ""}" id="toggle-low-stim">${s.lowStimulation ? "ON" : "OFF"}</button>
       </div>
-      <p class="settings-desc">Calms down visual intensity — dims the background art, flattens glow and blur effects, and softens high-alert screens like the Hollowcross transition.</p>
+      <p class="settings-desc">Calms down visual intensity — dims the background art, flattens glow and blur effects, and softens high-alert screens.</p>
     </div>
 
     <div class="settings-section">
       <div class="settings-label-row">
-        <label>Colorblind-Safe Mode</label>
+        <label>Colorblind Mode</label>
         <button class="settings-toggle ${s.colorblindSafe ? "on" : ""}" id="toggle-colorblind-safe">${s.colorblindSafe ? "ON" : "OFF"}</button>
       </div>
-      <p class="settings-desc">Swaps element colors for a colorblind-friendly palette and adds a distinct icon to every element swatch, so type is never shown by color alone.</p>
+      <p class="settings-desc">Swaps element colors for a colorblind-friendly palette and adds a distinct icon to every element swatch.</p>
     </div>
 
     <div class="settings-section">
