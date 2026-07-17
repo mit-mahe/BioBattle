@@ -865,7 +865,7 @@ function duckMusicForSpeech(){
     if(track && !track.paused){
       if(track._fadeTimer){ clearInterval(track._fadeTimer); track._fadeTimer = null; }
       track._preSpeechVolume = track.volume;
-      track.volume = Math.min(0.12, track._preSpeechVolume);
+      track.volume = Math.min(0.07, track._preSpeechVolume);
     }
   });
 }
