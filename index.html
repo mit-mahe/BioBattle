@@ -60,6 +60,58 @@ body.font-atkinson *, body.font-opendyslexic *{ text-transform:none !important; 
     scroll-behavior:auto !important;
   }
 
+  /* ---------- accessibility: low stimulation mode ---------- */
+  body.low-stim{
+    background:
+      linear-gradient(rgba(8,11,16,0.94), rgba(8,11,16,0.94)) center center / cover no-repeat fixed,
+      var(--bg) !important;
+  }
+  body.low-stim .transition-screen{
+    background:var(--panel) !important;
+  }
+  body.low-stim .transition-screen::before{
+    display:none;
+  }
+  body.low-stim .hazard-icon{
+    filter:none !important;
+    color:var(--muted) !important;
+  }
+  body.low-stim .hazard-bar{
+    background:var(--panel-2) !important;
+    animation:none !important;
+    opacity:1;
+  }
+  body.low-stim .transition-sub{
+    animation:none !important;
+    opacity:.8 !important;
+  }
+  body.low-stim .assign-target.pickable{
+    box-shadow:0 0 0 3px #FFD23F !important;
+    animation:none !important;
+  }
+  body.low-stim .bonus-genmod-section.flash-attention{
+    animation:none !important;
+    background:var(--signal-dim) !important;
+  }
+  body.low-stim .fight-center-box,
+  body.low-stim .panel{
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+  }
+
+  /* ---------- accessibility: colorblind-safe palette ---------- */
+  body.colorblind-safe{
+    --terra:#009E73; --aqua:#0072B2; --flare:#D55E00; --aero:#56B4E9; --spark:#E69F00;
+  }
+  .tswatch-wrap, .iswatch-wrap{ position:relative; display:inline-flex; }
+  .tswatch-cb-icon, .iswatch-cb-icon{
+    display:none; position:absolute; inset:0; align-items:center; justify-content:center; color:#fff; pointer-events:none;
+  }
+  body.colorblind-safe .tswatch-cb-icon, body.colorblind-safe .iswatch-cb-icon{ display:flex; }
+  .tswatch-cb-icon svg{ width:22px; height:22px; }
+  .iswatch-cb-icon{ inset:-2px; }
+  .iswatch-cb-icon svg{ width:11px; height:11px; }
+
   /* ---------- settings screen controls ---------- */
   .settings-section{ margin-bottom:24px; }
   .settings-section:first-of-type{ margin-top:18px; }
@@ -383,6 +435,13 @@ body{
   .fact-tip .fact-label{ font-family:'IBM Plex Mono',monospace; font-size:.72rem; letter-spacing:.1em; color:var(--signal); text-transform:uppercase; margin-bottom:4px; }
 
   .fact-tip .fact-src{ font-family:'IBM Plex Mono',monospace; font-size:.72rem; color:var(--muted); margin-top:6px; }
+
+  .fact-tip .fact-read-aloud{
+    font-family:'IBM Plex Mono',monospace; font-size:.7rem; font-weight:600; letter-spacing:.03em;
+    background:var(--signal-dim); color:var(--signal); border:1px solid var(--signal-dim);
+    border-radius:20px; padding:5px 12px; margin-top:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+  }
+  .fact-tip .fact-read-aloud.speaking{ background:var(--signal); color:#05140f; }
 
   .fact-tip::after{
     content:""; position:absolute; top:100%; left:50%; transform:translateX(-50%);
@@ -776,23 +835,63 @@ document.addEventListener("visibilitychange", ()=>{
 document.addEventListener("pointerdown", unlockAudio, {once:true});
 document.addEventListener("keydown", unlockAudio, {once:true});
 
-function fadeInAudio(audioEl, targetVolume, duration){
+function fadeAudioTo(audioEl, targetVolume, duration){
   if(!audioEl) return;
   duration = duration || 900;
   const steps = 18;
   const stepTime = duration / steps;
+  const startVolume = audioEl.volume;
   let step = 0;
-  audioEl.volume = 0;
   if(audioEl._fadeTimer) clearInterval(audioEl._fadeTimer);
   audioEl._fadeTimer = setInterval(()=>{
     step++;
-    audioEl.volume = Math.min(targetVolume, (targetVolume * step) / steps);
+    audioEl.volume = startVolume + (targetVolume - startVolume) * (step / steps);
     if(step >= steps){
       clearInterval(audioEl._fadeTimer);
       audioEl._fadeTimer = null;
       audioEl.volume = targetVolume;
     }
   }, stepTime);
+}
+
+function fadeInAudio(audioEl, targetVolume, duration){
+  if(!audioEl) return;
+  audioEl.volume = 0;
+  fadeAudioTo(audioEl, targetVolume, duration);
+}
+
+function duckMusicForSpeech(){
+  [menuAudio, wildbyteAudio, quizAudio, hollowcrossAudio].forEach(track=>{
+    if(track && !track.paused){
+      if(track._fadeTimer){ clearInterval(track._fadeTimer); track._fadeTimer = null; }
+      track._preSpeechVolume = track.volume;
+      track.volume = Math.min(0.12, track._preSpeechVolume);
+    }
+  });
+}
+
+function restoreMusicAfterSpeech(){
+  [menuAudio, wildbyteAudio, quizAudio, hollowcrossAudio].forEach(track=>{
+    if(track && track._preSpeechVolume != null){
+      if(!track.paused) fadeAudioTo(track, track._preSpeechVolume, 900);
+      track._preSpeechVolume = null;
+    }
+  });
+}
+
+function speakText(text, btn){
+  if(!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  duckMusicForSpeech();
+  const utter = new SpeechSynthesisUtterance(text);
+  if(btn) btn.classList.add("speaking");
+  const finish = ()=>{
+    restoreMusicAfterSpeech();
+    if(btn) btn.classList.remove("speaking");
+  };
+  utter.onend = finish;
+  utter.onerror = finish;
+  speechSynthesis.speak(utter);
 }
 
 function updateMenuAudio(){
@@ -1300,6 +1399,13 @@ const CHAOS = [
 ];
 
 const EL_COLOR = { Terra:"var(--terra)", Aqua:"var(--aqua)", Flare:"var(--flare)", Aero:"var(--aero)", Spark:"var(--spark)" };
+const EL_ICON_SVG = {
+  Terra: svgWrap(`<path d="M20,34 C20,20 20,10 20,4 C28,8 30,18 24,24 C18,18 12,20 8,12 C14,16 20,18 20,4" stroke-width="2.4"/>`, "0 0 40 40"),
+  Aqua: svgWrap(`<path d="M20,4 C28,16 32,24 32,29 C32,35.5 26.5,40 20,40 C13.5,40 8,35.5 8,29 C8,24 12,16 20,4 Z" stroke-width="2.4"/>`, "0 0 40 40"),
+  Flare: svgWrap(`<path d="M20,4 C24,12 16,16 20,22 C24,18 28,22 26,28 C24,34 16,36 12,30 C8,24 10,16 16,12 C14,16 16,18 18,16 C20,14 18,8 20,4 Z" stroke-width="2"/>`, "0 0 40 40"),
+  Aero: svgWrap(`<path d="M4,14 L26,14 C30,14 30,8 26,8 C23,8 22,10 22,12" stroke-width="2.2"/><path d="M4,20 L32,20 C36,20 36,26 32,26 C29,26 28,24 28,22" stroke-width="2.2"/><path d="M4,32 L20,32 C24,32 24,36 20,36" stroke-width="2.2"/>`, "0 0 40 40"),
+  Spark: svgWrap(`<path d="M22,4 L10,22 L18,22 L16,36 L30,16 L21,16 Z" stroke-width="2" stroke-linejoin="round"/>`, "0 0 40 40"),
+};
 
 // --- Decorative motifs, redrawn as inline SVG line-art to match the card art
 // style in the PDF (cream stroke/fill on a colored card, no photographic icons). ---
@@ -1527,7 +1633,7 @@ const state = {
   round:0, bossRound:0, phase:"setup", chaosDrawn:[], lastFight:null, gameOverText:null,
   selectedGenmod:null, previousScreen:"title", selectedFightIdx:null,
   quizOffered:false, quiz:null, quizResult:null, quizRevivalUsed:false,
-  settings:{ reduceMotion:false, sfxOn:true, musicOn:true, sfxVolume:0.8, musicVolume:0.4, textScale:1, font:"default" },
+  settings:{ reduceMotion:false, lowStimulation:false, colorblindSafe:false, sfxOn:true, musicOn:true, sfxVolume:0.8, musicVolume:0.4, textScale:1, font:"default" },
 };
 
 function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
@@ -1573,11 +1679,13 @@ function loadPersistedState(){
 
 function applySettings(){
   state.settings = Object.assign(
-    { reduceMotion:false, sfxOn:true, musicOn:true, sfxVolume:0.8, musicVolume:0.4, textScale:1, font:"default" },
+    { reduceMotion:false, lowStimulation:false, colorblindSafe:false, sfxOn:true, musicOn:true, sfxVolume:0.8, musicVolume:0.4, textScale:1, font:"default" },
     state.settings || {}
   );
   const s = state.settings;
   document.body.classList.toggle("reduce-motion", !!s.reduceMotion);
+  document.body.classList.toggle("low-stim", !!s.lowStimulation);
+  document.body.classList.toggle("colorblind-safe", !!s.colorblindSafe);
   document.documentElement.style.fontSize = (100 * (s.textScale || 1)) + "%";
   document.body.classList.remove("font-atkinson", "font-opendyslexic");
   if(s.font === "atkinson") document.body.classList.add("font-atkinson");
@@ -2603,7 +2711,7 @@ function screenFieldIndex(){
 
   const elRows = idx.elements.map(e=>`
     <div class="index-row">
-      <div class="irow-head"><span class="iswatch" style="background:${e.color}"></span>${esc(e.type)}</div>
+      <div class="irow-head"><span class="iswatch-wrap"><span class="iswatch" style="background:${e.color}"></span><i class="iswatch-cb-icon">${EL_ICON_SVG[e.type]||""}</i></span>${esc(e.type)}</div>
       <div class="ientries"><span class="exposure-badge ${e.tone}">${esc(e.label)}</span></div>
     </div>
     <div class="index-tip">${esc(e.tip)}</div>`).join("");
@@ -2617,7 +2725,7 @@ function screenFieldIndex(){
 
   const genmodRows = idx.genmodRisk.map(g=>`
     <div class="index-row">
-      <div class="irow-head"><span class="iswatch" style="background:${g.color}"></span>${esc(g.type)}</div>
+      <div class="irow-head"><span class="iswatch-wrap"><span class="iswatch" style="background:${g.color}"></span><i class="iswatch-cb-icon">${EL_ICON_SVG[g.type]||""}</i></span>${esc(g.type)}</div>
       <div class="ientries"><span class="exposure-badge ${g.tone}">${esc(g.label)}</span></div>
     </div>
     <div class="index-tip">${esc(g.tip)}</div>`).join("");
@@ -2628,7 +2736,7 @@ const rosterHtml = (rosterReport.length && state.previousScreen !== "title") ? `
     <div class="index-table">
       ${rosterReport.map(r=>`
         <div class="index-row">
-          <div class="irow-head"><span class="iswatch" style="background:${EL_COLOR[r.core.el]}"></span>${esc(r.core.name)} <span class="muted" style="font-weight:400">(${esc(r.core.el)} / ${esc(r.core.mech)})</span></div>
+          <div class="irow-head"><span class="iswatch-wrap"><span class="iswatch" style="background:${EL_COLOR[r.core.el]}"></span><i class="iswatch-cb-icon">${EL_ICON_SVG[r.core.el]||""}</i></span>${esc(r.core.name)} <span class="muted" style="font-weight:400">(${esc(r.core.el)} / ${esc(r.core.mech)})</span></div>
           <div class="ientries">
             <span class="exposure-badge ${r.elInfo.tone}">${esc(r.core.el)}: ${esc(r.elInfo.label)}</span>
             <span class="exposure-badge ${r.mechInfo.tone}">${esc(r.core.mech)}: ${esc(r.mechInfo.label)}</span>
@@ -2750,7 +2858,7 @@ function screenTitle(){
 function screenInstructions(){
   const elRow = ELEMENT_NAMES.map(e=>`
     <div class="type-item">
-      <span class="tswatch" style="background:${EL_COLOR[e]}"></span>
+      <span class="tswatch-wrap"><span class="tswatch" style="background:${EL_COLOR[e]}"></span><i class="tswatch-cb-icon">${EL_ICON_SVG[e]||""}</i></span>
       <div class="type-item-label">${esc(e.toUpperCase())}</div>
     </div>`).join("");
   const mechRow = MECHANIC_NAMES.map(m=>`
@@ -2851,6 +2959,22 @@ function screenSettings(){
         <button class="settings-toggle ${s.reduceMotion ? "on" : ""}" id="toggle-reduce-motion">${s.reduceMotion ? "ON" : "OFF"}</button>
       </div>
       <p class="settings-desc">Shortens or removes animations, transitions, and screen flourishes throughout the game.</p>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-label-row">
+        <label>Low Stimulation Mode</label>
+        <button class="settings-toggle ${s.lowStimulation ? "on" : ""}" id="toggle-low-stim">${s.lowStimulation ? "ON" : "OFF"}</button>
+      </div>
+      <p class="settings-desc">Calms down visual intensity — dims the background art, flattens glow and blur effects, and softens high-alert screens like the Hollowcross transition.</p>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-label-row">
+        <label>Colorblind-Safe Mode</label>
+        <button class="settings-toggle ${s.colorblindSafe ? "on" : ""}" id="toggle-colorblind-safe">${s.colorblindSafe ? "ON" : "OFF"}</button>
+      </div>
+      <p class="settings-desc">Swaps element colors for a colorblind-friendly palette and adds a distinct icon to every element swatch, so type is never shown by color alone.</p>
     </div>
 
     <div class="settings-section">
@@ -3330,6 +3454,18 @@ function attachHandlers(){
     applySettings(); persistSettings(); render();
   };
 
+  const toggleLowStim = document.getElementById("toggle-low-stim");
+  if(toggleLowStim) toggleLowStim.onclick = ()=>{
+    state.settings.lowStimulation = !state.settings.lowStimulation;
+    applySettings(); persistSettings(); render();
+  };
+
+  const toggleColorblindSafe = document.getElementById("toggle-colorblind-safe");
+  if(toggleColorblindSafe) toggleColorblindSafe.onclick = ()=>{
+    state.settings.colorblindSafe = !state.settings.colorblindSafe;
+    applySettings(); persistSettings(); render();
+  };
+
   const toggleSfx = document.getElementById("toggle-sfx");
   if(toggleSfx) toggleSfx.onclick = ()=>{
     state.settings.sfxOn = !state.settings.sfxOn;
@@ -3411,14 +3547,28 @@ function positionFactTip(){
 function revealTip(){
       const f = getFact(type, name, base);
       tip.innerHTML = f
-        ? `<div class="fact-label">Field Note — ${esc(name)}</div>${esc(f.fact)}<div class="fact-src">Source: ${esc(f.source)}</div>`
+        ? `<div class="fact-label">Field Note — ${esc(name)}</div>${esc(f.fact)}<div class="fact-src">Source: ${esc(f.source)}</div><button type="button" class="fact-read-aloud">🔊 Read aloud</button>`
         : `<div class="fact-label">Field Note — ${esc(name)}</div>No catalogued field data for this specimen yet.`;
       tip.classList.add("show");
 positionFactTip();
       markFactSeen(type, name, base);
+      const readBtn = tip.querySelector(".fact-read-aloud");
+      if(readBtn && f){
+        readBtn.addEventListener("click", (e)=>{
+          e.stopPropagation();
+          if(readBtn.classList.contains("speaking")){
+            speechSynthesis.cancel();
+            restoreMusicAfterSpeech();
+            readBtn.classList.remove("speaking");
+            return;
+          }
+          speakText(f.fact, readBtn);
+        });
+      }
     }
     const tapKey = type + "::" + name + "::" + (base||"");
     frame.addEventListener("click", (e)=>{
+      if(e.target.closest(".fact-read-aloud")) return;
       const now = Date.now();
       const last = factTapTimes[tapKey] || 0;
       const isDoubleTap = (now - last) < 400;
