@@ -1643,7 +1643,10 @@ const SAVE_KEY = "biobattle_save_v1";
 const SETTINGS_KEY = "biobattle_settings_v1";
 
 function persistState(){
-  try{ sessionStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+  try{
+    const { settings, ...rest } = state;
+    sessionStorage.setItem(SAVE_KEY, JSON.stringify(rest));
+  }catch(e){}
 }
 
 function persistSettings(){
@@ -1658,23 +1661,26 @@ function rehydrateFx(list, master){
 }
 
 function loadPersistedState(){
+  let sessionRestored = false;
+  try{
+    const raw = sessionStorage.getItem(SAVE_KEY);
+    if(raw){
+      const saved = JSON.parse(raw);
+      Object.assign(state, saved);
+      state.wbQueue = rehydrateFx(state.wbQueue, WILDBYTES);
+      state.chaosDrawn = rehydrateFx(state.chaosDrawn, CHAOS);
+      if(state.currentBoss){
+        const foundBoss = BOSSES.find(b=>b.name===state.currentBoss.name);
+        if(foundBoss) state.currentBoss = {...state.currentBoss, fx: foundBoss.fx};
+      }
+      sessionRestored = true;
+    }
+  }catch(e){}
   try{
     const rawSettings = localStorage.getItem(SETTINGS_KEY);
     if(rawSettings) state.settings = JSON.parse(rawSettings);
   }catch(e){}
-  try{
-    const raw = sessionStorage.getItem(SAVE_KEY);
-    if(!raw) return false;
-    const saved = JSON.parse(raw);
-    Object.assign(state, saved);
-    state.wbQueue = rehydrateFx(state.wbQueue, WILDBYTES);
-    state.chaosDrawn = rehydrateFx(state.chaosDrawn, CHAOS);
-    if(state.currentBoss){
-      const foundBoss = BOSSES.find(b=>b.name===state.currentBoss.name);
-      if(foundBoss) state.currentBoss = {...state.currentBoss, fx: foundBoss.fx};
-    }
-    return true;
-  }catch(e){ return false; }
+  return sessionRestored;
 }
 
 function applySettings(){
@@ -2341,6 +2347,7 @@ function drawResultCardCanvas(){
   ctx.fillStyle = "#8a93a6";
   ctx.fillText("Game Design and Development by Shivam Mohite", 40, 420);
   ctx.fillText("Creative Design by Aditi Rishiraj, Neethu Mariam, V. Sai Pallavi", 40, 436);
+  ctx.fillText("Music and SFX are licensed under Creative Commons Zero (CC0)", 40, 436);
 
   return canvas;
 }
@@ -2937,7 +2944,7 @@ function screenInstructions(){
       <li>If its DEF drops to zero, it's lost for good</li>
     </ol>
   </div>
-  <footer class="credit">Game Design and Development by Shivam Mohite<br>Creative Design by Aditi Rishiraj, Neethu Mariam, V. Sai Pallavi</footer>`;
+  <footer class="credit">Game Design and Development by Shivam Mohite<br>Creative Design by Aditi Rishiraj, Neethu Mariam, V. Sai Pallavi<br>Music and SFX are licensed under Creative Commons Zero (CC0)</footer>`;
 }
 
 function screenSettings(){
@@ -3030,7 +3037,7 @@ function screenSettings(){
       <p class="settings-desc">Switches the game's text to a font designed for easier reading.</p>
     </div>
   </div>
-  <footer class="credit">Game Design and Development by Shivam Mohite<br>Creative Design by Aditi Rishiraj, Neethu Mariam, V. Sai Pallavi</footer>`;
+  <footer class="credit">Game Design and Development by Shivam Mohite<br>Creative Design by Aditi Rishiraj, Neethu Mariam, V. Sai Pallavi<br>Music and SFX are licensed under Creative Commons Zero (CC0)</footer>`;
 }
 
 function hoverHintHTML(){
@@ -3296,7 +3303,7 @@ function screenEnd(){
       <button class="btn" id="end-menu-btn">Menu</button>
     </div>
   </div>
-  <footer class="credit">Game Design and Development by Shivam Mohite<br>Creative Design by Aditi Rishiraj, Neethu Mariam, V. Sai Pallavi</footer>`;
+  <footer class="credit">Game Design and Development by Shivam Mohite<br>Creative Design by Aditi Rishiraj, Neethu Mariam, V. Sai Pallavi<br>Music and SFX are licensed under Creative Commons Zero (CC0)</footer>`;
 }
 
 /* ============================ EVENTS ============================ */
