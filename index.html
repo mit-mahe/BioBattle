@@ -973,12 +973,19 @@ function updateAlarmAudio(){
 
 function showLoader(){
   const el = document.getElementById("app-loader");
-  if(el) el.classList.remove("hidden");
+  if(el){
+    el.style.opacity = "1";
+    el.style.pointerEvents = "all";
+  }
 }
 function hideLoader(){
   const el = document.getElementById("app-loader");
-  if(el) el.classList.add("hidden");
+  if(el){
+    el.style.opacity = "0";
+    el.style.pointerEvents = "none";
+  }
 }
+
 (function waitForBgImageThenHideLoader(){
   const bgImg = new Image();
   bgImg.onload = hideLoader;
