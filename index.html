@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Quicksand:wght@500;600;700&family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<link rel="preload" as="image" href="images/bg_1.jpg">
 <style>
 
   :root{
@@ -780,18 +781,18 @@ body{
 
 </head>
 <body>
-<audio id="menu-audio" src="audio/Elevator_Music.mp3" loop preload="auto"></audio>
-<audio id="wildbyte-audio" src="audio/Wildbyte.mp3" loop preload="auto"></audio>
-<audio id="quiz-audio" src="audio/Quiz.mp3" loop preload="auto"></audio>
-<audio id="hollowcross-audio" src="audio/Hollowcross.mp3" loop preload="auto"></audio>
-<audio id="sfx-win" src="audio/winneris.mp3" preload="auto"></audio>
-<audio id="sfx-lose" src="audio/total_fail.mp3" preload="auto"></audio>
-<audio id="sfx-alarm" src="audio/alarm.mp3" loop preload="auto"></audio>
+<audio id="menu-audio" src="audio/Elevator_Music.mp3" loop preload="none"></audio>
+<audio id="wildbyte-audio" src="audio/Wildbyte.mp3" loop preload="none"></audio>
+<audio id="quiz-audio" src="audio/Quiz.mp3" loop preload="none"></audio>
+<audio id="hollowcross-audio" src="audio/Hollowcross.mp3" loop preload="none"></audio>
+<audio id="sfx-win" src="audio/winneris.mp3" preload="none"></audio>
+<audio id="sfx-lose" src="audio/total_fail.mp3" preload="none"></audio>
+<audio id="sfx-alarm" src="audio/alarm.mp3" loop preload="none"></audio>
 <div id="app-loader" class="app-loader">
   <img id="app-loader-icon" class="app-loader-icon" alt="Loading">
 </div>
 <div class="wrap" id="app"></div>
-<div class="top-right-credit" id="top-right-credit" style="display:none">Adapted from BioBattle - Manipal BioMachines</div>
+<div class="top-right-credit" id="top-right-credit" style="display:none">Adapted from BioBattle - Manipal BioMachines 2025-26</div>
 <script>
 const MENU_SCREENS = new Set(["title", "instructions", "codex", "achievements", "settings"]);
 const menuAudio = document.getElementById("menu-audio");
@@ -2313,7 +2314,7 @@ function drawResultCardCanvas(){
   ctx.textAlign = "right";
   ctx.font = "12px 'IBM Plex Mono', monospace";
   ctx.fillStyle = "#c9c2ae";
-  ctx.fillText("Adapted from BioBattle - Manipal BioMachines", 760, 34);
+  ctx.fillText("Adapted from BioBattle - Manipal BioMachines 2025-26", 760, 34);
   ctx.textAlign = "left";
 
   ctx.font = "bold 28px 'Space Grotesk', sans-serif";
@@ -2759,11 +2760,9 @@ const rosterHtml = (rosterReport.length && state.previousScreen !== "title") ? `
     <div class="panel-header-row">
       <h2>Strategy Manual</h2>
       <div class="header-actions">
-        <button class="info-btn" aria-label="Show help for this screen" title="Show help for this screen">i</button>
         <button class="panel-back-btn" id="close-index">Back</button>
       </div>
     </div>
-    ${pageHint("This page is just for reading — nothing here changes your game. Come back anytime you want a refresher.")}
     <p class="muted">In BioBattle, each WildByte and Project Hollowcross card calls out specific Elements or Mechanic types in their Overdrive Effects. This report doesn't reveal which exact cards do what (that's still yours to discover), but it does score how hard the deck as a whole leans on each type, so you know where to reinforce before you commit a BioCore.</p>
     ${rosterHtml}
     <h2 style="margin-top:18px">By Element</h2>
