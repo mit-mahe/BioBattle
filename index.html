@@ -781,6 +781,9 @@ body{
 
 </head>
 <body>
+<div id="app-loader" class="app-loader">
+  <img id="app-loader-icon" class="app-loader-icon" alt="Loading">
+</div>
 <audio id="menu-audio" src="audio/Elevator_Music.mp3" loop preload="none"></audio>
 <audio id="wildbyte-audio" src="audio/Wildbyte.mp3" loop preload="none"></audio>
 <audio id="quiz-audio" src="audio/Quiz.mp3" loop preload="none"></audio>
@@ -788,9 +791,6 @@ body{
 <audio id="sfx-win" src="audio/winneris.mp3" preload="none"></audio>
 <audio id="sfx-lose" src="audio/total_fail.mp3" preload="none"></audio>
 <audio id="sfx-alarm" src="audio/alarm.mp3" loop preload="none"></audio>
-<div id="app-loader" class="app-loader">
-  <img id="app-loader-icon" class="app-loader-icon" alt="Loading">
-</div>
 <div class="wrap" id="app"></div>
 <div class="top-right-credit" id="top-right-credit" style="display:none">Adapted from BioBattle - Manipal BioMachines 2025-26</div>
 <script>
@@ -979,11 +979,13 @@ function hideLoader(){
   const el = document.getElementById("app-loader");
   if(el) el.classList.add("hidden");
 }
-if(document.readyState === "complete"){
-  hideLoader();
-} else {
-  window.addEventListener("load", hideLoader);
-}
+(function waitForBgImageThenHideLoader(){
+  const bgImg = new Image();
+  bgImg.onload = hideLoader;
+  bgImg.onerror = hideLoader;
+  bgImg.src = "images/bg_1.jpg";
+  if(bgImg.complete) hideLoader();
+})();
 
 // Dedicated high-resolution loader icon (cropped from the Manipal
 // BioMachines logo artwork) — kept separate from the favicon, which stays
