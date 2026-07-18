@@ -143,7 +143,7 @@ body.font-atkinson *, body.font-opendyslexic *{ text-transform:none !important; 
 
   *{ box-sizing:border-box; }
 
-  html,body{ height:100%; }
+  html,body{ height:100%; overflow-x:hidden; max-width:100%; }
 
 body{
     margin:0;
@@ -155,6 +155,11 @@ body{
     font-family:'Inter',sans-serif;
     min-height:100%;
   }
+@media (max-width: 768px){
+  body{
+    background-attachment: scroll, scroll;
+  }
+}
 
   .wrap{ max-width:920px; margin:0 auto; padding:28px 18px 60px; }
 
@@ -623,6 +628,14 @@ body{
     pointer-events:none;
   }
 
+@media (max-width: 480px){
+  .top-right-credit{
+    font-size:.56rem;
+    max-width:70vw;
+    line-height:1.3;
+  }
+}
+
  .info-btn{
     width:30px; height:30px; border-radius:50%; border:1.5px solid var(--signal); flex-shrink:0;
     background:rgba(17,23,34,0.85); color:var(--signal); font-family:'Space Grotesk',sans-serif;
@@ -794,6 +807,22 @@ body{
 <div class="wrap" id="app"></div>
 <div class="top-right-credit" id="top-right-credit" style="display:none">Adapted from BioBattle - Manipal BioMachines 2025-26</div>
 <script>
+const SCREEN_URL_SLUGS = {
+  "title": "title",
+  "instructions": "instructions",
+  "settings": "settings",
+  "setup": "setup",
+  "pick": "pick-a-fight",
+  "fight-result": "fight-result",
+  "chaos-reveal": "chaos-draw",
+  "phase-transition": "hollowcross-incoming",
+  "field-index": "strategy-manual",
+  "codex": "explorers-log",
+  "achievements": "achievements",
+  "quiz": "hollowcross-override",
+  "quiz-result": "override-result",
+  "end": "results"
+};
 const MENU_SCREENS = new Set(["title", "instructions", "codex", "achievements", "settings"]);
 const menuAudio = document.getElementById("menu-audio");
 if(menuAudio) menuAudio.volume = 0.4;
@@ -2155,8 +2184,9 @@ function render(){
     }
     updateAlarmAudio();
     try{
-      if(location.hash.slice(1) !== state.screen){
-        history.replaceState(null, "", "#"+state.screen);
+      const slug = SCREEN_URL_SLUGS[state.screen] || state.screen;
+      if(location.hash.slice(1) !== slug){
+        history.replaceState(null, "", "#"+slug);
       }
     }catch(e){}
   }catch(err){
